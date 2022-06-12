@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gorilla/feeds"
@@ -12,7 +13,7 @@ type readLaterFeed struct {
 	history history
 }
 
-func newFeed() *readLaterFeed {
+func newFeed(website string, author string) *readLaterFeed {
 	history, err := newHistory()
 	if err != nil {
 		panic(err)
@@ -20,11 +21,12 @@ func newFeed() *readLaterFeed {
 	parser := newParser()
 	f := readLaterFeed{
 		feed: &feeds.Feed{
-			Title:   "Read Later",
-			Link:    &feeds.Link{Href: "https://muravev.space"},
-			Author:  &feeds.Author{Name: "kim", Email: "me@muravev.space"},
-			Created: time.Now(),
-			Items:   []*feeds.Item{},
+			Title:       "Read Later",
+			Link:        &feeds.Link{Href: website},
+			Description: fmt.Sprintf("%s's list of saved links", author),
+			Author:      &feeds.Author{Name: author},
+			Created:     time.Now(),
+			Items:       []*feeds.Item{},
 		},
 		parser:  parser,
 		history: history,

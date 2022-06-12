@@ -15,9 +15,9 @@ type result struct {
 	Message string
 }
 
-func NewHandler(templateFS embed.FS) *Handler {
+func NewHandler(templateFS embed.FS, website string, author string) *Handler {
 	return &Handler{
-		feed:       newFeed(),
+		feed:       newFeed(website, author),
 		templateFS: templateFS,
 	}
 }
