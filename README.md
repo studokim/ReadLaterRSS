@@ -17,13 +17,17 @@ git clone https://github.com/studokim/ReadLaterRSS.git
 cd ReadLaterRSS
 go get github.com/studokim/ReadLaterRSS
 go build
-./ReadLaterRSS --listen <port>
+./ReadLaterRSS --listen <port> --website <yoursite.com> --author <your.name>
 ```
 
 Now subscribe to the new feed using your RSS reader: the address is `localhost:port/rss`.
 
 ### Adding articles
 
-Go to `localhost:port/add`, paste the url of the article and click `Add!`. The article will be converted to an RSS item. If any error occurs, it will be shown immediately.
+Go to `localhost:port/add`, paste the url of the article and click `Add!`. The link will be converted to an RSS item and appended to the feed. If any error occurs, it will be shown immediately.
 
 All the articles are saved into `history.yml` with the timestamp, so you may restart the server anytime preserving the feed state.
+
+## Screenshots
+
+![New RSS item](screenshots/add-item.png)
