@@ -29,6 +29,6 @@ func main() {
 		http.ListenAndServe(":"+args[2], nil)
 	} else {
 		fmt.Println("Usage: ./ReadLaterRSS --listen <port> --website <yoursite.com> --author <your.name>")
-		fmt.Println("or     ./ReadLaterRSS -l       <port> --s       <yoursite.com> --a      <your.name>")
+		fmt.Println("or     ./ReadLaterRSS -l       <port> -s       <yoursite.com> -a      <your.name>")
 	}
 }

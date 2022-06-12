@@ -1,0 +1,16 @@
+[Unit]
+Description=ReadLaterRSS
+Requires=network-online.target
+After=network-online.target
+After=multi-user.target
+StartLimitIntervalSec=500
+StartLimitBurst=5
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+Type=simple
+ExecStart=/srv/ReadLaterRSS -l 9225 -s example.com -a admin
+
+[Install]
+WantedBy=multi-user.target
