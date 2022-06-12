@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/studokim/read-later-rss/internal"
+	"github.com/studokim/ReadLaterRSS/internal"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 		http.HandleFunc("/rss", h.Rss)
 		http.ListenAndServe(":"+args[2], nil)
 	} else {
-		fmt.Println("Usage: ./read-later-rss --listen <port>")
-		fmt.Println("or     ./read-later-rss -l       <port>")
+		fmt.Println("Usage: ./ReadLaterRSS --listen <port>")
+		fmt.Println("or     ./ReadLaterRSS -l       <port>")
 	}
 }

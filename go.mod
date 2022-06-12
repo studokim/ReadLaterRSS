@@ -1,4 +1,4 @@
-module github.com/studokim/read-later-rss
+module github.com/studokim/ReadLaterRSS
 
 go 1.18
 
