@@ -5,9 +5,11 @@ input[type=url] {
     border-radius: 4px;
 }
 
-input[type=submit] {
+.button {
     font-family: 'Courier New', Courier, monospace;
     font-weight: bold;
+    font-size: medium;
+    text-decoration: none;
     background-color: #04AA6D;
     color: white;
     padding: 8px 24px;
