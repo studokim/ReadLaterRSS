@@ -12,7 +12,7 @@ func main() {
 	args := os.Args
 	if len(args) > 1 && (args[1] == "--listen" || args[1] == "-l") {
 		staticServer := http.FileServer(http.Dir("static"))
-		http.Handle("/style.css", staticServer)
+		http.Handle("/static/", http.StripPrefix("/static", staticServer))
 		h := internal.NewHandler()
 		http.HandleFunc("/add", h.Add)
 		http.HandleFunc("/rss", h.Rss)

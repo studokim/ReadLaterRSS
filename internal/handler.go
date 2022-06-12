@@ -19,7 +19,7 @@ func NewHandler() *Handler {
 
 func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("static/form.html")
+		t, _ := template.ParseFiles("templates/form.html")
 		t.Execute(w, nil)
 	} else {
 		r.ParseForm()
@@ -31,7 +31,7 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 		} else {
 			res = result{Message: "Done!"}
 		}
-		t, err := template.ParseFiles("static/result.html")
+		t, err := template.ParseFiles("templates/result.html")
 		if err != nil {
 			w.Write([]byte(err.Error()))
 		} else {
