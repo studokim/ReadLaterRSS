@@ -1,25 +1,30 @@
 package internal
 
 import (
+	"embed"
 	"net/http"
 	"text/template"
 )
 
 type Handler struct {
-	feed *readLaterFeed
+	feed       *readLaterFeed
+	templateFS embed.FS
 }
 
 type result struct {
 	Message string
 }
 
-func NewHandler() *Handler {
-	return &Handler{feed: newFeed()}
+func NewHandler(templateFS embed.FS) *Handler {
+	return &Handler{
+		feed:       newFeed(),
+		templateFS: templateFS,
+	}
 }
 
 func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("templates/form.html")
+		t, _ := template.ParseFS(h.templateFS, "templates/form.html")
 		t.Execute(w, nil)
 	} else {
 		r.ParseForm()
@@ -31,7 +36,7 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 		} else {
 			res = result{Message: "Done!"}
 		}
-		t, err := template.ParseFiles("templates/result.html")
+		t, err := template.ParseFS(h.templateFS, "templates/result.html")
 		if err != nil {
 			w.Write([]byte(err.Error()))
 		} else {

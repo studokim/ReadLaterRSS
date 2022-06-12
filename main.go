@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"net/http"
 	"os"
@@ -8,12 +9,18 @@ import (
 	"github.com/studokim/ReadLaterRSS/internal"
 )
 
+//go:embed static
+var static embed.FS
+
+//go:embed templates
+var templates embed.FS
+
 func main() {
 	args := os.Args
 	if len(args) > 1 && (args[1] == "--listen" || args[1] == "-l") {
-		staticServer := http.FileServer(http.Dir("static"))
-		http.Handle("/static/", http.StripPrefix("/static", staticServer))
-		h := internal.NewHandler()
+		staticServer := http.FileServer(http.FS(static))
+		http.Handle("/static/", staticServer)
+		h := internal.NewHandler(templates)
 		http.HandleFunc("/add", h.Add)
 		http.HandleFunc("/rss", h.Rss)
 		http.ListenAndServe(":"+args[2], nil)
