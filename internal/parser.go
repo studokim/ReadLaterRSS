@@ -1,11 +1,14 @@
 package internal
 
 import (
+	"fmt"
+
 	"github.com/badoux/goscraper"
 	"github.com/gorilla/feeds"
 )
 
 type parser struct {
+	url string
 	doc *goscraper.Document
 }
 
@@ -14,6 +17,7 @@ func newParser() *parser {
 }
 
 func (p *parser) parse(url string) error {
+	p.url = url
 	doc, err := goscraper.Scrape(url, 3)
 	if err != nil {
 		return err
@@ -33,5 +37,10 @@ func (p *parser) getAuthor() *feeds.Author {
 }
 
 func (p *parser) getDescription() string {
-	return p.doc.Preview.Description
+	if len(p.doc.Preview.Description) > 0 {
+		return p.doc.Preview.Description
+	}
+	return fmt.Sprintf(
+		"No description provided, please follow <a href=\"%s\">the link</a>.\n",
+		p.url)
 }
