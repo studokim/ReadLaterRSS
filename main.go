@@ -12,8 +12,8 @@ import (
 //go:embed static
 var static embed.FS
 
-//go:embed templates
-var templates embed.FS
+//go:embed html
+var html embed.FS
 
 func main() {
 	args := os.Args
@@ -23,7 +23,8 @@ func main() {
 		(args[5] == "--author" || args[5] == "-a") {
 		staticServer := http.FileServer(http.FS(static))
 		http.Handle("/static/", staticServer)
-		h := internal.NewHandler(templates, args[4], args[6])
+		h := internal.NewHandler(html, args[4], args[6])
+		http.HandleFunc("/", h.Index)
 		http.HandleFunc("/add", h.Add)
 		http.HandleFunc("/rss", h.Rss)
 		http.ListenAndServe(":"+args[2], nil)

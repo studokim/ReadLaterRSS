@@ -1,7 +1,8 @@
+{{define "template"}}
 <html>
 
 <head>
-    <title>New RSS item</title>
+    <title>RSS: Read Later</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="/static/style.css">
@@ -10,14 +11,9 @@
 
 <body>
     <div class="container">
-        <div class="row">
-            {{.Message}}
-        </div>
-        <div class="row">
-            <a href="add" class="button">Go back!</a>
-        </div>
-        </form>
+        {{template "content" .}}
     </div>
 </body>
 
 </html>
+{{end}}

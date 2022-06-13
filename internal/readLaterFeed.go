@@ -31,15 +31,13 @@ func newFeed(website string, author string) *readLaterFeed {
 		parser:  parser,
 		history: history,
 	}
-	items := []*feeds.Item{}
 	for time, url := range history {
 		item, err := f.buildItem(url, time)
 		if err != nil {
 			continue
 		}
-		items = append(items, item)
+		f.feed.Items = append(f.feed.Items, item)
 	}
-	f.feed.Items = items
 	return &f
 }
 

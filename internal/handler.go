@@ -7,40 +7,45 @@ import (
 )
 
 type Handler struct {
-	feed       *readLaterFeed
-	templateFS embed.FS
+	feed   *readLaterFeed
+	htmlFS embed.FS
 }
 
 type result struct {
 	Message string
 }
 
-func NewHandler(templateFS embed.FS, website string, author string) *Handler {
+func NewHandler(htmlFS embed.FS, website string, author string) *Handler {
 	return &Handler{
-		feed:       newFeed(website, author),
-		templateFS: templateFS,
+		feed:   newFeed(website, author),
+		htmlFS: htmlFS,
 	}
+}
+
+func (h *Handler) renderPage(w http.ResponseWriter, pageName string, r result) {
+	t, err := template.ParseFS(h.htmlFS, "html/"+pageName, "html/template.html")
+	if err != nil {
+		w.Write([]byte(err.Error()))
+	} else {
+		t.ExecuteTemplate(w, "template", r)
+	}
+}
+
+func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
+	h.renderPage(w, "index.html", result{})
 }
 
 func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		t, _ := template.ParseFS(h.templateFS, "templates/form.html")
-		t.Execute(w, nil)
+		h.renderPage(w, "form.html", result{})
 	} else {
 		r.ParseForm()
 		url := r.Form["url"][0]
 		err := h.feed.addItem(url)
-		var res result
 		if err != nil {
-			res = result{Message: err.Error()}
+			h.renderPage(w, "result.html", result{Message: err.Error()})
 		} else {
-			res = result{Message: "Done!"}
-		}
-		t, err := template.ParseFS(h.templateFS, "templates/result.html")
-		if err != nil {
-			w.Write([]byte(err.Error()))
-		} else {
-			t.Execute(w, res)
+			h.renderPage(w, "result.html", result{Message: "Done!"})
 		}
 	}
 }
