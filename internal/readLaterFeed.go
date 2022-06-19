@@ -31,8 +31,8 @@ func newFeed(website string, author string) *readLaterFeed {
 		parser:  parser,
 		history: history,
 	}
-	for time, url := range history {
-		item, err := f.buildItem(url, time)
+	for _, record := range history {
+		item, err := f.buildItem(record.Url, record.When)
 		if err != nil {
 			continue
 		}

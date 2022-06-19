@@ -9,7 +9,12 @@ import (
 
 const fileName = "history.yml"
 
-type history map[time.Time]string
+type record struct {
+	When time.Time
+	Url  string
+}
+
+type history []record
 
 func newHistory() (history, error) {
 	if _, err := os.Stat(fileName); err != nil {
@@ -19,7 +24,7 @@ func newHistory() (history, error) {
 	if err != nil {
 		return nil, err
 	}
-	history := make(history)
+	history := history{}
 	err = yaml.Unmarshal(file, &history)
 	if err != nil {
 		return nil, err
@@ -27,16 +32,18 @@ func newHistory() (history, error) {
 	return history, nil
 }
 
-func (h history) add(url string, when time.Time) error {
-	file, err := os.OpenFile(fileName, os.O_WRONLY, 0644)
+func (h *history) add(url string, when time.Time) error {
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	h[when] = url
-	err = yaml.NewEncoder(file).Encode(h)
+	r := record{Url: url, When: when}
+	*h = append(*h, r)
+	bytes, err := yaml.Marshal([]record{r})
 	if err != nil {
 		return err
 	}
-	return nil
+	_, err = file.Write(bytes)
+	return err
 }
