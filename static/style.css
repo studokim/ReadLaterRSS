@@ -1,12 +1,25 @@
+* {
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0%;
+}
+
+textarea,
 input[type=url] {
     width: 100%;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    font-size: smaller;
+    min-height: 3em;
+    max-height: 30em;
+}
+
+input[type=checkbox] {
+    width: 3em;
+    height: 1.5em;
 }
 
 .button {
-    font-family: 'Courier New', Courier, monospace;
     font-weight: bold;
     font-size: medium;
     text-decoration: none;
@@ -20,7 +33,6 @@ input[type=url] {
 }
 
 .container {
-    font-family: 'Courier New', Courier, monospace;
     border-radius: 5px;
     background-color: #f2f2f2;
     padding: 8px;

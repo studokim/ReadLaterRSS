@@ -32,7 +32,7 @@ func newFeed(website string, author string) *readLaterFeed {
 		history: history,
 	}
 	for _, record := range history {
-		item, err := f.buildItem(record.Url, record.When)
+		item, err := f.buildItem(record.Url, record.Context, record.When)
 		if err != nil {
 			continue
 		}
@@ -41,22 +41,22 @@ func newFeed(website string, author string) *readLaterFeed {
 	return &f
 }
 
-func (f *readLaterFeed) addItem(url string) error {
+func (f *readLaterFeed) addItem(url string, context string) error {
 	now := time.Now()
-	item, err := f.buildItem(url, now)
+	item, err := f.buildItem(url, context, now)
 	if err != nil {
 		return err
 	}
 	f.feed.Items = append(f.feed.Items, item)
-	err = f.history.add(url, now)
+	err = f.history.add(url, context, now)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (f *readLaterFeed) buildItem(url string, created time.Time) (*feeds.Item, error) {
-	err := f.parser.parse(url)
+func (f *readLaterFeed) buildItem(url string, context string, created time.Time) (*feeds.Item, error) {
+	err := f.parser.parse(url, context)
 	if err != nil {
 		return nil, err
 	}

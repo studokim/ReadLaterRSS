@@ -10,8 +10,9 @@ import (
 const fileName = "history.yml"
 
 type record struct {
-	When time.Time
-	Url  string
+	Url     string
+	Context string
+	When    time.Time
 }
 
 type history []record
@@ -32,13 +33,13 @@ func newHistory() (history, error) {
 	return history, nil
 }
 
-func (h *history) add(url string, when time.Time) error {
+func (h *history) add(url string, context string, when time.Time) error {
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	r := record{Url: url, When: when}
+	r := record{Url: url, Context: context, When: when}
 	*h = append(*h, r)
 	bytes, err := yaml.Marshal([]record{r})
 	if err != nil {
