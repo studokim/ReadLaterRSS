@@ -8,21 +8,27 @@ import (
 )
 
 type parser struct {
-	url string
-	doc *goscraper.Document
+	url   string
+	doc   *goscraper.Document
+	cache map[string]*goscraper.Document
 }
 
 func newParser() *parser {
-	return &parser{}
+	return &parser{cache: make(map[string]*goscraper.Document)}
 }
 
 func (p *parser) parse(url string) error {
+	if doc, ok := p.cache[url]; ok {
+		p.doc = doc
+		return nil
+	}
 	p.url = url
 	doc, err := goscraper.Scrape(url, 3)
 	if err != nil {
 		return err
 	}
 	p.doc = doc
+	p.cache[url] = doc
 	return nil
 }
 

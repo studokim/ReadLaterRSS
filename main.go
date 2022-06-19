@@ -23,10 +23,12 @@ func main() {
 		(args[5] == "--author" || args[5] == "-a") {
 		staticServer := http.FileServer(http.FS(static))
 		http.Handle("/static/", staticServer)
+		fmt.Println("Loading history...")
 		h := internal.NewHandler(html, args[4], args[6])
 		http.HandleFunc("/", h.Index)
 		http.HandleFunc("/add", h.Add)
 		http.HandleFunc("/rss", h.Rss)
+		fmt.Printf("Serving at http://127.0.0.1:%s\n", args[2])
 		http.ListenAndServe(":"+args[2], nil)
 	} else {
 		fmt.Println("Usage: ./ReadLaterRSS --listen <port> --website <yoursite.com> --author <your.name>")
