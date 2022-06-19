@@ -41,7 +41,12 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	} else {
 		r.ParseForm()
 		url := r.Form["url"][0]
-		context := r.Form["context"][0]
+		var context string
+		if len(r.Form["describe"]) > 0 {
+			context = r.Form["context"][0]
+		} else {
+			context = ""
+		}
 		err := h.feed.addItem(url, context)
 		if err != nil {
 			h.renderPage(w, "result.html", result{Message: err.Error()})
