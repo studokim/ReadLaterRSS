@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/gorilla/feeds"
@@ -31,11 +32,7 @@ func newFeed(website string, author string) *readLaterFeed {
 		parser:  parser,
 		history: history,
 	}
-	for _, record := range history {
-		item, err := f.buildItem(record.Url, record.Context, record.When)
-		if err != nil {
-			continue
-		}
+	for item := range f.buildItemsFromHistory() {
 		f.feed.Items = append(f.feed.Items, item)
 	}
 	return &f
@@ -75,4 +72,30 @@ func (f *readLaterFeed) getRss() (string, error) {
 		return "", err
 	}
 	return rss, nil
+}
+
+func (f *readLaterFeed) buildItemsFromHistory() <-chan *feeds.Item {
+	size := len(f.history)
+	records := make(chan record, size)
+	items := make(chan *feeds.Item, size)
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			for record := range records {
+				item, err := f.buildItem(record.Url, record.Context, record.When)
+				if err == nil {
+					items <- item
+				}
+			}
+			wg.Done()
+		}()
+	}
+	for _, record := range f.history {
+		records <- record
+	}
+	close(records)
+	wg.Wait()
+	close(items)
+	return items
 }
