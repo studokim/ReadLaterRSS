@@ -25,9 +25,7 @@ func main() {
 		http.Handle("/static/", staticServer)
 		fmt.Println("Loading history...")
 		h := internal.NewHandler(html, args[4], args[6])
-		http.HandleFunc("/", h.Index)
-		http.HandleFunc("/add", h.Add)
-		http.HandleFunc("/rss", h.Rss)
+		h.RegisterEndpoints()
 		fmt.Printf("Serving at http://127.0.0.1:%s\n", args[2])
 		http.ListenAndServe(":"+args[2], nil)
 	} else {

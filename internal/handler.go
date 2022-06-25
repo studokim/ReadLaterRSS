@@ -2,13 +2,13 @@ package internal
 
 import (
 	"embed"
+	"html/template"
 	"net/http"
-	"text/template"
 )
 
 type Handler struct {
-	feed   *readLaterFeed
-	htmlFS embed.FS
+	rssFeed *rssFeed
+	htmlFS  embed.FS
 }
 
 type result struct {
@@ -17,25 +17,32 @@ type result struct {
 
 func NewHandler(htmlFS embed.FS, website string, author string) *Handler {
 	return &Handler{
-		feed:   newFeed(website, author),
-		htmlFS: htmlFS,
+		rssFeed: newFeed(website, author),
+		htmlFS:  htmlFS,
 	}
 }
 
-func (h *Handler) renderPage(w http.ResponseWriter, pageName string, r result) {
+func (h *Handler) RegisterEndpoints() {
+	http.HandleFunc("/", h.index)
+	http.HandleFunc("/add", h.add)
+	http.HandleFunc("/rss", h.rss)
+	http.HandleFunc("/feed", h.feed)
+}
+
+func (h *Handler) renderPage(w http.ResponseWriter, pageName string, content any) {
 	t, err := template.ParseFS(h.htmlFS, "html/"+pageName, "html/template.html")
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	} else {
-		t.ExecuteTemplate(w, "template", r)
+		t.ExecuteTemplate(w, "template", content)
 	}
 }
 
-func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
 	h.renderPage(w, "index.html", result{})
 }
 
-func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) add(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		h.renderPage(w, "form.html", result{})
 	} else {
@@ -47,7 +54,7 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 		} else {
 			context = ""
 		}
-		err := h.feed.addItem(url, context)
+		err := h.rssFeed.addItem(url, context)
 		if err != nil {
 			h.renderPage(w, "result.html", result{Message: err.Error()})
 		} else {
@@ -56,11 +63,15 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) Rss(w http.ResponseWriter, r *http.Request) {
-	rss, err := h.feed.getRss()
+func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
+	rss, err := h.rssFeed.getRss()
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	} else {
 		w.Write([]byte(rss))
 	}
+}
+
+func (h *Handler) feed(w http.ResponseWriter, r *http.Request) {
+	h.renderPage(w, "feed.html", h.rssFeed.getItems())
 }

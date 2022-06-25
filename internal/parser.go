@@ -51,5 +51,5 @@ func (p *parser) getDescription() string {
 	if len(p.context) == 0 {
 		return p.doc.Preview.Description
 	}
-	return fmt.Sprintf("%s<br>%s", p.context, p.doc.Preview.Description)
+	return fmt.Sprintf("%s<br><br>%s", p.context, p.doc.Preview.Description)
 }
