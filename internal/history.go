@@ -2,22 +2,15 @@ package internal
 
 import (
 	"os"
-	"time"
 
 	"gopkg.in/yaml.v3"
 )
 
 const fileName = "history.yml"
 
-type record struct {
-	Url     string
-	Context string
-	When    time.Time
-}
-
 type history []record
 
-func newHistory() (history, error) {
+func newHistory() (iHistory, error) {
 	if _, err := os.Stat(fileName); err != nil {
 		os.Create(fileName)
 	}
@@ -30,21 +23,27 @@ func newHistory() (history, error) {
 	if err != nil {
 		return nil, err
 	}
-	return history, nil
+	return &history, nil
 }
 
-func (h *history) add(url string, context string, when time.Time) error {
+func (h *history) add(r record) error {
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	r := record{Url: url, Context: context, When: when}
 	*h = append(*h, r)
-	bytes, err := yaml.Marshal([]record{r})
+	bytes, err := yaml.Marshal(history{r})
 	if err != nil {
 		return err
 	}
 	_, err = file.Write(bytes)
 	return err
+}
+func (h *history) getSize() int {
+	return len(*h)
+}
+
+func (h *history) getRecords() []record {
+	return *h
 }

@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -11,21 +10,16 @@ import (
 
 type rssFeed struct {
 	feed    *feeds.Feed
-	parser  *parser
-	history history
+	parser  iParser
+	history iHistory
 }
 
-func newFeed(website string, author string) *rssFeed {
-	history, err := newHistory()
-	if err != nil {
-		panic(err)
-	}
-	parser := newParser()
+func newFeed(title string, website string, description string, author string, parser iParser, history iHistory) *rssFeed {
 	f := rssFeed{
 		feed: &feeds.Feed{
-			Title:       "Read Later",
+			Title:       title,
 			Link:        &feeds.Link{Href: website},
-			Description: fmt.Sprintf("%s's list of saved links", author),
+			Description: description,
 			Author:      &feeds.Author{Name: author},
 			Created:     time.Now(),
 			Items:       []*feeds.Item{},
@@ -39,33 +33,14 @@ func newFeed(website string, author string) *rssFeed {
 	return &f
 }
 
-func (f *rssFeed) addItem(url string, context string) error {
-	now := time.Now()
-	item, err := f.buildItem(url, context, now)
+func (f *rssFeed) addItem(r record) error {
+	item, err := f.parser.parse(r)
 	if err != nil {
 		return err
 	}
 	f.feed.Items = append(f.feed.Items, item)
-	err = f.history.add(url, context, now)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (f *rssFeed) buildItem(url string, context string, created time.Time) (*feeds.Item, error) {
-	err := f.parser.parse(url, context)
-	if err != nil {
-		return nil, err
-	}
-	return &feeds.Item{
-		Title:       f.parser.getTitle(),
-		Link:        &feeds.Link{Href: url},
-		Description: f.parser.getDescription(),
-		Author:      f.parser.getAuthor(),
-		Created:     created,
-		Id:          created.Format(time.RFC3339),
-	}, nil
+	err = f.history.add(r)
+	return err
 }
 
 func (f *rssFeed) getRss() (string, error) {
@@ -85,15 +60,15 @@ func (f *rssFeed) getItems() []*feeds.Item {
 }
 
 func (f *rssFeed) buildItemsFromHistory() <-chan *feeds.Item {
-	size := len(f.history)
+	size := f.history.getSize()
 	records := make(chan record, size)
 	items := make(chan *feeds.Item, size)
 	var wg sync.WaitGroup
 	for i := 0; i < 8; i++ {
 		wg.Add(1)
 		go func() {
-			for record := range records {
-				item, err := f.buildItem(record.Url, record.Context, record.When)
+			for r := range records {
+				item, err := f.parser.parse(r)
 				if err == nil {
 					items <- item
 				}
@@ -101,8 +76,8 @@ func (f *rssFeed) buildItemsFromHistory() <-chan *feeds.Item {
 			wg.Done()
 		}()
 	}
-	for _, record := range f.history {
-		records <- record
+	for _, r := range f.history.getRecords() {
+		records <- r
 	}
 	close(records)
 	wg.Wait()

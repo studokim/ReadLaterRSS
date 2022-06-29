@@ -2,8 +2,10 @@ package internal
 
 import (
 	"embed"
+	"fmt"
 	"html/template"
 	"net/http"
+	"time"
 )
 
 type Handler struct {
@@ -16,8 +18,15 @@ type result struct {
 }
 
 func NewHandler(htmlFS embed.FS, website string, author string) *Handler {
+	history, err := newHistory()
+	if err != nil {
+		panic(err)
+	}
+	parser := newParser()
+	title := "Read Later"
+	description := fmt.Sprintf("%s's list of saved links", author)
 	return &Handler{
-		rssFeed: newFeed(website, author),
+		rssFeed: newFeed(title, website, description, author, parser, history),
 		htmlFS:  htmlFS,
 	}
 }
@@ -50,11 +59,12 @@ func (h *Handler) add(w http.ResponseWriter, r *http.Request) {
 		url := r.Form["url"][0]
 		var context string
 		if len(r.Form["describe"]) > 0 {
-			context = r.Form["context"][0]
+			context = ConvertLineBreaks(r.Form["context"][0])
 		} else {
 			context = ""
 		}
-		err := h.rssFeed.addItem(url, context)
+		r := record{Url: url, Context: context, When: time.Now()}
+		err := h.rssFeed.addItem(r)
 		if err != nil {
 			h.renderPage(w, "result.html", result{Message: err.Error()})
 		} else {
