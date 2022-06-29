@@ -3,7 +3,8 @@ package internal
 import "time"
 
 type record struct {
-	Url     string
-	Context string
-	When    time.Time
+	Title string
+	Url   string
+	Text  string
+	When  time.Time
 }

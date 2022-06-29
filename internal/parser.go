@@ -56,11 +56,14 @@ func (p *parser) getDescription(r record) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if len(doc.Preview.Description) == 0 && len(r.Context) == 0 {
+	if len(doc.Preview.Description) == 0 && len(r.Text) == 0 {
 		return fmt.Sprintf("No description provided, please follow <a href=\"%s\">the link</a>.", r.Url), nil
 	}
-	if len(r.Context) == 0 {
+	if len(r.Text) == 0 {
 		return doc.Preview.Description, nil
 	}
-	return fmt.Sprintf("%s<br><br>%s", r.Context, doc.Preview.Description), nil
+	if len(doc.Preview.Description) == 0 {
+		return r.Text, nil
+	}
+	return fmt.Sprintf("%s<br><br>%s", r.Text, doc.Preview.Description), nil
 }

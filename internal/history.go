@@ -1,49 +1,50 @@
 package internal
 
 import (
-	"os"
-
 	"gopkg.in/yaml.v3"
 )
 
-const fileName = "history.yml"
+type history struct {
+	name    string
+	records []record
+}
 
-type history []record
-
-func newHistory() (iHistory, error) {
-	if _, err := os.Stat(fileName); err != nil {
-		os.Create(fileName)
-	}
-	file, err := os.ReadFile(fileName)
+func newHistory(name string) (iHistory, error) {
+	h := history{name: name}
+	bytes, err := readFile(h.getFileName())
 	if err != nil {
 		return nil, err
 	}
-	history := history{}
-	err = yaml.Unmarshal(file, &history)
+	err = yaml.Unmarshal(bytes, &h.records)
 	if err != nil {
 		return nil, err
 	}
-	return &history, nil
+	return &h, nil
 }
 
 func (h *history) add(r record) error {
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND, 0644)
+	file, err := openFileAppend(h.getFileName())
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	*h = append(*h, r)
-	bytes, err := yaml.Marshal(history{r})
+	h.records = append(h.records, r)
+	bytes, err := yaml.Marshal([]record{r})
 	if err != nil {
 		return err
 	}
 	_, err = file.Write(bytes)
 	return err
 }
+
 func (h *history) getSize() int {
-	return len(*h)
+	return len(h.records)
+}
+
+func (h *history) getFileName() string {
+	return h.name + "-history.yml"
 }
 
 func (h *history) getRecords() []record {
-	return *h
+	return h.records
 }

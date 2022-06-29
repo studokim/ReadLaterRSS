@@ -9,8 +9,8 @@ import (
 )
 
 type Handler struct {
-	rssFeed *rssFeed
-	htmlFS  embed.FS
+	readLaterFeed *rssFeed
+	htmlFS        embed.FS
 }
 
 type result struct {
@@ -18,7 +18,7 @@ type result struct {
 }
 
 func NewHandler(htmlFS embed.FS, website string, author string) *Handler {
-	history, err := newHistory()
+	history, err := newHistory("new")
 	if err != nil {
 		panic(err)
 	}
@@ -26,8 +26,8 @@ func NewHandler(htmlFS embed.FS, website string, author string) *Handler {
 	title := "Read Later"
 	description := fmt.Sprintf("%s's list of saved links", author)
 	return &Handler{
-		rssFeed: newFeed(title, website, description, author, parser, history),
-		htmlFS:  htmlFS,
+		readLaterFeed: newFeed(title, website, description, author, parser, history),
+		htmlFS:        htmlFS,
 	}
 }
 
@@ -59,12 +59,12 @@ func (h *Handler) add(w http.ResponseWriter, r *http.Request) {
 		url := r.Form["url"][0]
 		var context string
 		if len(r.Form["describe"]) > 0 {
-			context = ConvertLineBreaks(r.Form["context"][0])
+			context = convertLineBreaks(r.Form["context"][0])
 		} else {
 			context = ""
 		}
-		r := record{Url: url, Context: context, When: time.Now()}
-		err := h.rssFeed.addItem(r)
+		r := record{Url: url, Text: context, When: time.Now()}
+		err := h.readLaterFeed.addItem(r)
 		if err != nil {
 			h.renderPage(w, "result.html", result{Message: err.Error()})
 		} else {
@@ -74,7 +74,7 @@ func (h *Handler) add(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
-	rss, err := h.rssFeed.getRss()
+	rss, err := h.readLaterFeed.getRss()
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	} else {
@@ -83,5 +83,5 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) feed(w http.ResponseWriter, r *http.Request) {
-	h.renderPage(w, "feed.html", h.rssFeed.getItems())
+	h.renderPage(w, "feed.html", h.readLaterFeed.getItems())
 }
