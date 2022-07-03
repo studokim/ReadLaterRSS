@@ -8,6 +8,8 @@ Just like [Pocket](https://getpocket.com/). But simpler.
 
 There are times when you want to save internet articles for later, but having a separate file or an app to read them feels uncomfortable. **ReadLaterRSS** helps to integrate your list into any RSS reader you already use.
 
+Since version 2, text-only feeds with automatic translation by [LibreTranslate](https://libretranslate.de/) are supported. Currently Deutsch to English only.
+
 ## Usage
 
 ### Starting the server
