@@ -46,7 +46,7 @@ func NewHandler(htmlFS embed.FS, website string, author string) *Handler {
 
 func (h *Handler) RegisterEndpoints() {
 	http.HandleFunc("/", h.index)
-	http.HandleFunc("/add", h.add)
+	http.HandleFunc("/save", h.save)
 	http.HandleFunc("/deutsch", h.deutsch)
 	http.HandleFunc("/rss", h.rss)
 	http.HandleFunc("/explore", h.explore)
@@ -65,9 +65,9 @@ func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
 	h.renderPage(w, "index.html", result{})
 }
 
-func (h *Handler) add(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) save(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		h.renderPage(w, "add.html", result{})
+		h.renderPage(w, "save.html", result{})
 	} else {
 		r.ParseForm()
 		url := r.Form["url"][0]
