@@ -6,6 +6,8 @@ import (
 	"html/template"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/feeds"
 )
 
 type Handler struct {
@@ -47,9 +49,8 @@ func NewHandler(htmlFS embed.FS, website string, author string) *Handler {
 func (h *Handler) RegisterEndpoints() {
 	http.HandleFunc("/", h.index)
 	http.HandleFunc("/save", h.save)
-	http.HandleFunc("/deutsch", h.deutsch)
-	http.HandleFunc("/rss", h.rss)
 	http.HandleFunc("/explore", h.explore)
+	http.HandleFunc("/rss", h.rss)
 }
 
 func (h *Handler) renderPage(w http.ResponseWriter, pageName string, content any) {
@@ -60,14 +61,29 @@ func (h *Handler) renderPage(w http.ResponseWriter, pageName string, content any
 		t.ExecuteTemplate(w, "template", content)
 	}
 }
+func (h *Handler) getSelectedFeed(w http.ResponseWriter, r *http.Request) string {
+	feed, err := r.Cookie("feed")
+	if err != nil {
+		return "readlater"
+	}
+	return feed.Value
+}
 
 func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
 	h.renderPage(w, "index.html", result{})
 }
 
 func (h *Handler) save(w http.ResponseWriter, r *http.Request) {
+	if h.getSelectedFeed(w, r) == "readLater" {
+		h.urlForm(w, r)
+	} else {
+		h.textForm(w, r)
+	}
+}
+
+func (h *Handler) urlForm(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		h.renderPage(w, "save.html", result{})
+		h.renderPage(w, "saveUrl.html", result{})
 	} else {
 		r.ParseForm()
 		url := r.Form["url"][0]
@@ -80,16 +96,16 @@ func (h *Handler) save(w http.ResponseWriter, r *http.Request) {
 		r := record{Url: url, Text: context, When: time.Now()}
 		err := h.readLaterFeed.addItem(r)
 		if err != nil {
-			h.renderPage(w, "result.html", result{Message: err.Error()})
+			h.renderPage(w, "saveResult.html", result{Message: err.Error()})
 		} else {
-			h.renderPage(w, "result.html", result{Message: "Done!"})
+			h.renderPage(w, "saveResult.html", result{Message: "Done!"})
 		}
 	}
 }
 
-func (h *Handler) deutsch(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) textForm(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		h.renderPage(w, "deutsch.html", result{})
+		h.renderPage(w, "saveText.html", result{})
 	} else {
 		r.ParseForm()
 		title := r.Form["title"][0]
@@ -97,15 +113,21 @@ func (h *Handler) deutsch(w http.ResponseWriter, r *http.Request) {
 		r := record{Title: title, Text: text, When: time.Now()}
 		err := h.deutschFeed.addItem(r)
 		if err != nil {
-			h.renderPage(w, "result.html", result{Message: err.Error()})
+			h.renderPage(w, "saveResult.html", result{Message: err.Error()})
 		} else {
-			h.renderPage(w, "result.html", result{Message: "Done!"})
+			h.renderPage(w, "saveResult.html", result{Message: "Done!"})
 		}
 	}
 }
 
 func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
-	rss, err := h.readLaterFeed.getRss()
+	var rss string
+	var err error
+	if h.getSelectedFeed(w, r) == "readLater" {
+		rss, err = h.readLaterFeed.getRss()
+	} else {
+		rss, err = h.deutschFeed.getRss()
+	}
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	} else {
@@ -114,7 +136,12 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) explore(w http.ResponseWriter, r *http.Request) {
-	rssItems := h.readLaterFeed.getItems()
+	var rssItems []*feeds.Item
+	if h.getSelectedFeed(w, r) == "readLater" {
+		rssItems = h.readLaterFeed.getItems()
+	} else {
+		rssItems = h.deutschFeed.getItems()
+	}
 	renderedItems := make([]renderedItem, len(rssItems))
 	for id, item := range rssItems {
 		renderedItems[id] = renderedItem{Id: item.Id, Title: item.Title, Url: item.Link.Href,

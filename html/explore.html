@@ -8,7 +8,7 @@
     <div class="column">
         <button id="button_{{.Id}}" name="button" type="button" class="button"
             onclick="toggleSpoiler('{{.Id}}')">Show</button>
-        <a href="{{.Url}}" class="button">Read</a>
+        <a href="{{.Url}}" name="read" class="button">Read</a>
     </div>
 </div>
 <div class="row" id="spoiler_{{.Id}}" name="spoiler" style="font-size:smaller; text-align:justify; display:none">
@@ -19,5 +19,6 @@
 
 <script>
     setActiveHeaderItem("header-explore");
+    hideReadButtons();
 </script>
 {{end}}

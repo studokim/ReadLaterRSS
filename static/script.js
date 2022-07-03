@@ -3,7 +3,6 @@ function setActiveHeaderItem(id) {
     items.forEach(item => {
         item.classList.remove("active")
     });
-
     var item = document.getElementById(id);
     item.classList.add("active")
 }
@@ -18,7 +17,6 @@ function toggleSpoiler(id) {
             button.innerText = "Show";
         }
     });
-
     var spoiler = document.getElementById("spoiler_" + id);
     var button = document.getElementById("button_" + id);
     if (spoiler.style.display === "block") {
@@ -39,11 +37,17 @@ function showContext() {
     }
 }
 
+function hideReadButtons() {
+    if (readFeedCookie() === "deutsch") {
+        var buttons = document.getElementsByName("read");
+        buttons.forEach(button => {
+            button.style.display = "none";
+        });
+    }
+}
+
 function selectFeed() {
-    option = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('feed='))
-        ?.split('=')[1];
+    option = readFeedCookie();
     if (option) {
         document.getElementById("feed").value = option;
     }
@@ -54,4 +58,11 @@ function changeFeed() {
     document.cookie = `feed=${option}; path=/; SameSite=Strict`;
     // reload without POST DATA
     window.location = window.location.href;
+}
+
+function readFeedCookie() {
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith('feed='))
+        ?.split('=')[1];
 }
