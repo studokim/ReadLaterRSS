@@ -16,6 +16,7 @@
     align-items: center;
 }
 
+select,
 .button {
     background-color: #04aa6d;
     color: white;

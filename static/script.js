@@ -38,3 +38,20 @@ function showContext() {
         context.style.display = "none";
     }
 }
+
+function selectFeed() {
+    option = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('feed='))
+        ?.split('=')[1];
+    if (option) {
+        document.getElementById("feed").value = option;
+    }
+}
+
+function changeFeed() {
+    var option = document.getElementById("feed").value;
+    document.cookie = `feed=${option}; path=/; SameSite=Strict`;
+    // reload without POST DATA
+    window.location = window.location.href;
+}
