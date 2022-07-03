@@ -1,6 +1,7 @@
 {{define "content"}}
 
 {{range .}}
+<hr id="hr_{{.Id}}">
 <div class="row" style="justify-content:space-between;">
     <div>
         <p><strong>{{.Title}}</strong></p>
@@ -11,7 +12,7 @@
         <a href="{{.Url}}" name="read" class="button">Read</a>
     </div>
 </div>
-<div class="row" id="spoiler_{{.Id}}" name="spoiler" style="font-size:smaller; text-align:justify; display:none">
+<div class="row" id="spoiler_{{.Id}}" name="spoiler" style="text-align:justify; display:none">
     <p>{{.Text}}</p>
     <p align="right"><em>{{.Created}}</em></p>
 </div>
@@ -20,5 +21,6 @@
 <script>
     setActiveHeaderItem("header-explore");
     hideReadButtons();
+    hideTopHr();
 </script>
 {{end}}

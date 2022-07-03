@@ -13,12 +13,24 @@ func convertLineBreaks(s string) string {
 	return s
 }
 
+func splitOnParagraphs(text string) []string {
+	var paragraphs []string
+	splitted := strings.Split(text, "<br>")
+	for _, paragraph := range splitted {
+		if len(paragraph) != 0 {
+			paragraphs = append(paragraphs, paragraph)
+		}
+	}
+	return paragraphs
+}
+
 func readFile(fileName string) ([]byte, error) {
 	if _, err := os.Stat(fileName); err != nil {
 		os.Create(fileName)
 	}
 	return os.ReadFile(fileName)
 }
+
 func openFileAppend(fileName string) (*os.File, error) {
 	return os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND, 0644)
 }

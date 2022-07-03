@@ -110,10 +110,23 @@ func (h *Handler) textForm(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		title := r.Form["title"][0]
 		text := convertLineBreaks(r.Form["text"][0])
-		r := record{Title: title, Text: text, When: time.Now()}
-		err := h.deutschFeed.addItem(r)
-		if err != nil {
-			h.renderPage(w, "saveResult.html", result{Message: err.Error()})
+		var maxerr error
+		if len(r.Form["split"]) > 0 {
+			parapraphs := splitOnParagraphs(text)
+			for id, paragraph := range parapraphs {
+				created := time.Now().Add(time.Hour * time.Duration(id*6))
+				r := record{Title: title, Text: paragraph, When: created}
+				err := h.deutschFeed.addItem(r)
+				if err != nil {
+					maxerr = err
+				}
+			}
+		} else {
+			r := record{Title: title, Text: text, When: time.Now()}
+			maxerr = h.deutschFeed.addItem(r)
+		}
+		if maxerr != nil {
+			h.renderPage(w, "saveResult.html", result{Message: maxerr.Error()})
 		} else {
 			h.renderPage(w, "saveResult.html", result{Message: "Done!"})
 		}

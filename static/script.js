@@ -46,6 +46,15 @@ function hideReadButtons() {
     }
 }
 
+function hideTopHr() {
+    var topSpoiler = document.getElementsByName("spoiler")[0];
+    if (topSpoiler) {
+        var baseId = topSpoiler.id.substring("spoiler_".length);
+        var hr = document.getElementById("hr_" + baseId);
+        hr.style.display = "none";
+    }
+}
+
 function selectFeed() {
     option = readFeedCookie();
     if (option) {

@@ -97,3 +97,10 @@ input[type=checkbox] {
     width: 3em;
     height: 1.5em;
 }
+
+hr {
+    border: none;
+    height: 1px;
+    background-color: #ccc;
+    color: #ccc;
+}
