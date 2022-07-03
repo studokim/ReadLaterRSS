@@ -114,5 +114,12 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) explore(w http.ResponseWriter, r *http.Request) {
-	h.renderPage(w, "explore.html", h.readLaterFeed.getItems())
+	rssItems := h.readLaterFeed.getItems()
+	renderedItems := make([]renderedItem, len(rssItems))
+	for id, item := range rssItems {
+		renderedItems[id] = renderedItem{Id: item.Id, Title: item.Title, Url: item.Link.Href,
+			Text:    template.HTML(item.Description),
+			Created: item.Created.Format(time.RFC822)}
+	}
+	h.renderPage(w, "explore.html", renderedItems)
 }
