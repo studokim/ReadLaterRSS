@@ -10,6 +10,7 @@ import (
 
 type Handler struct {
 	readLaterFeed *rssFeed
+	deutschFeed   *rssFeed
 	htmlFS        embed.FS
 }
 
@@ -18,15 +19,27 @@ type result struct {
 }
 
 func NewHandler(htmlFS embed.FS, website string, author string) *Handler {
-	history, err := newHistory("new")
+	history, err := newHistory("later")
 	if err != nil {
 		panic(err)
 	}
-	parser := newParser()
+	parser := newUrlParser()
 	title := "Read Later"
 	description := fmt.Sprintf("%s's list of saved links", author)
+	readLaterFeed := newFeed(title, website, description, author, parser, history)
+
+	history, err = newHistory("deutsch")
+	if err != nil {
+		panic(err)
+	}
+	parser = newTextParser()
+	title = "Daily Deutsch"
+	description = fmt.Sprintf("%s's daily feed for learning deutsch", author)
+	deutschFeed := newFeed(title, website, description, author, parser, history)
+
 	return &Handler{
-		readLaterFeed: newFeed(title, website, description, author, parser, history),
+		readLaterFeed: readLaterFeed,
+		deutschFeed:   deutschFeed,
 		htmlFS:        htmlFS,
 	}
 }
@@ -34,8 +47,9 @@ func NewHandler(htmlFS embed.FS, website string, author string) *Handler {
 func (h *Handler) RegisterEndpoints() {
 	http.HandleFunc("/", h.index)
 	http.HandleFunc("/add", h.add)
+	http.HandleFunc("/deutsch", h.deutsch)
 	http.HandleFunc("/rss", h.rss)
-	http.HandleFunc("/feed", h.feed)
+	http.HandleFunc("/explore", h.explore)
 }
 
 func (h *Handler) renderPage(w http.ResponseWriter, pageName string, content any) {
@@ -53,7 +67,7 @@ func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) add(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		h.renderPage(w, "form.html", result{})
+		h.renderPage(w, "add.html", result{})
 	} else {
 		r.ParseForm()
 		url := r.Form["url"][0]
@@ -73,6 +87,23 @@ func (h *Handler) add(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handler) deutsch(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		h.renderPage(w, "deutsch.html", result{})
+	} else {
+		r.ParseForm()
+		title := r.Form["title"][0]
+		text := convertLineBreaks(r.Form["text"][0])
+		r := record{Title: title, Text: text, When: time.Now()}
+		err := h.deutschFeed.addItem(r)
+		if err != nil {
+			h.renderPage(w, "result.html", result{Message: err.Error()})
+		} else {
+			h.renderPage(w, "result.html", result{Message: "Done!"})
+		}
+	}
+}
+
 func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 	rss, err := h.readLaterFeed.getRss()
 	if err != nil {
@@ -82,6 +113,6 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) feed(w http.ResponseWriter, r *http.Request) {
-	h.renderPage(w, "feed.html", h.readLaterFeed.getItems())
+func (h *Handler) explore(w http.ResponseWriter, r *http.Request) {
+	h.renderPage(w, "explore.html", h.readLaterFeed.getItems())
 }

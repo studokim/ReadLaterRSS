@@ -8,15 +8,15 @@ import (
 	"github.com/gorilla/feeds"
 )
 
-type parser struct {
+type urlParser struct {
 	cache map[string]*goscraper.Document
 }
 
-func newParser() *parser {
-	return &parser{cache: make(map[string]*goscraper.Document)}
+func newUrlParser() iParser {
+	return &urlParser{cache: make(map[string]*goscraper.Document)}
 }
 
-func (p *parser) parse(r record) (*feeds.Item, error) {
+func (p *urlParser) parse(r record) (*feeds.Item, error) {
 	doc, err := p.getDoc(r)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (p *parser) parse(r record) (*feeds.Item, error) {
 	return item, nil
 }
 
-func (p *parser) getDoc(r record) (*goscraper.Document, error) {
+func (p *urlParser) getDoc(r record) (*goscraper.Document, error) {
 	var doc *goscraper.Document
 	if document, ok := p.cache[r.Url]; ok {
 		doc = document
@@ -51,7 +51,7 @@ func (p *parser) getDoc(r record) (*goscraper.Document, error) {
 	return doc, nil
 }
 
-func (p *parser) getDescription(r record) (string, error) {
+func (p *urlParser) getDescription(r record) (string, error) {
 	doc, err := p.getDoc(r)
 	if err != nil {
 		return "", err
