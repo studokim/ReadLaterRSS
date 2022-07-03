@@ -3,21 +3,15 @@
     margin: 0%;
 }
 
-textarea,
-input[type=url],
-input[type=text] {
+.header {
+    background-color: #04AA6D;
+    position: fixed;
+    top: 0;
     width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: smaller;
-    min-height: 3em;
-    max-height: 30em;
-}
-
-input[type=checkbox] {
-    width: 3em;
-    height: 1.5em;
+    height: 3em;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
 }
 
 .button {
@@ -35,6 +29,16 @@ input[type=checkbox] {
 
 .button:hover {
     background-color: #037a4e;
+}
+
+/* placed after the button, to override its text-decoration */
+.active {
+    text-decoration: underline;
+}
+
+.content {
+    margin-top: 5em;
+    margin-bottom: 5em;
 }
 
 .container {
@@ -55,14 +59,18 @@ input[type=checkbox] {
     align-items: center;
 }
 
-.header {
-    background-color: #04AA6D;
-    padding: 8px;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
+textarea,
+input[type=url],
+input[type=text] {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: smaller;
+    min-height: 3em;
+    max-height: 30em;
 }
 
-.active {
-    text-decoration: underline;
+input[type=checkbox] {
+    width: 3em;
+    height: 1.5em;
 }

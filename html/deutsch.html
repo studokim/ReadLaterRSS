@@ -1,19 +1,21 @@
 {{define "content"}}
-<form action="deutsch" method="post">
-    <div class="row">
-        <label for="title">Here goes the title:</label>
-    </div>
-    <div class="row">
-        <input type="text" id="title" name="title" required="required" autofocus
-            placeholder="Ein interessanter Artikel">
-    </div>
-    <div class="row">
-        <textarea rows="6" id="text" name="text" style="resize:vertical;" placeholder="Lorem ipsum..."></textarea>
-    </div>
-    <div class="row">
-        <input type="submit" value="Save!" class="button">
-    </div>
-</form>
+<div class="container">
+    <form action="deutsch" method="post">
+        <div class="row">
+            <label for="title">Here goes the title:</label>
+        </div>
+        <div class="row">
+            <input type="text" id="title" name="title" required="required" autofocus
+                placeholder="Ein interessanter Artikel">
+        </div>
+        <div class="row">
+            <textarea rows="6" id="text" name="text" style="resize:vertical;" placeholder="Lorem ipsum..."></textarea>
+        </div>
+        <div class="row">
+            <input type="submit" value="Save!" class="button">
+        </div>
+    </form>
+</div>
 
 <script>
     setActiveHeaderItem("header-add");
