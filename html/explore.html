@@ -1,4 +1,5 @@
 {{define "content"}}
+
 {{range .}}
 <div class="row">
     <p><strong>{{.Title}}</strong></p>
@@ -16,26 +17,6 @@
 {{end}}
 
 <script>
-    function toggleSpoiler(id) {
-        var spoilers = document.getElementsByName("spoiler");
-        spoilers.forEach(spoiler => {
-            var baseId = spoiler.id.substring("spoiler_".length);
-            var button = document.getElementById("button_" + baseId);
-            if (baseId != id && spoiler.style.display === "block") {
-                spoiler.style.display = "none";
-                button.innerText = "Show";
-            }
-        });
-
-        var spoiler = document.getElementById("spoiler_" + id);
-        var button = document.getElementById("button_" + id);
-        if (spoiler.style.display === "block") {
-            spoiler.style.display = "none";
-            button.innerText = "Show";
-        } else {
-            spoiler.style.display = "block";
-            button.innerText = "Hide";
-        }
-    };
+    setActiveHeaderItem("header-explore");
 </script>
 {{end}}

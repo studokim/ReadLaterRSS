@@ -1,4 +1,5 @@
 {{define "template"}}
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -6,10 +7,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="/static/style.css">
+    <script src="/static/script.js"></script>
     <link rel="shortcut icon" href="/static/favicon.ico">
 </head>
 
 <body>
+    <div class="header">
+        <a id="header-add" name="header" href="add" class="button">Save</a>
+        <a id="header-explore" name="header" href="explore" class="button">Explore</a>
+        <a id="header-rss" name="header" href="rss" class="button">RSS</a>
+    </div>
     <div class="container">
         {{template "content" .}}
     </div>

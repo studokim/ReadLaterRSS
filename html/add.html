@@ -19,14 +19,8 @@
         <input type="submit" value="Save!" class="button">
     </div>
 </form>
+
 <script>
-    function showContext() {
-        var context = document.getElementById("context");
-        if (document.getElementById("describe").checked == true) {
-            context.style.display = "block";
-        } else {
-            context.style.display = "none";
-        }
-    }
+    setActiveHeaderItem("header-add");
 </script>
 {{end}}
