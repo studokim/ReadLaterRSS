@@ -9,11 +9,12 @@ import (
 )
 
 type textParser struct {
-	translator translator
+	translator   translator
+	errorMessage string
 }
 
 func newTextParser() iParser {
-	return &textParser{translator: newTranslator()}
+	return &textParser{translator: newTranslator(), errorMessage: "Translator unreachable."}
 }
 
 func (p *textParser) parse(r record) (*feeds.Item, error) {
@@ -32,17 +33,20 @@ func (p *textParser) parse(r record) (*feeds.Item, error) {
 func (p *textParser) getText(r record) string {
 	translated, err := p.translator.translate(r.Text)
 	if err != nil {
-		return r.Text
+		return fmt.Sprintf("%s<br><br><em>[%s]</em>", r.Text, p.errorMessage)
 	}
-	sentences := splitOnSentences(r.Text)
+	textSentences := splitOnSentences(r.Text)
 	translatedSentences := splitOnSentences(translated)
-	if len(sentences) != len(translatedSentences) {
+	if len(textSentences) != len(translatedSentences) {
 		return fmt.Sprintf("%s<br><br><em>[%s]</em>", r.Text, translated)
 	}
 	text := r.Text
-	for id := range sentences {
-		sentence := fmt.Sprintf("%s <strike>[%s]</strike>", sentences[id], translatedSentences[id])
-		text = strings.Replace(text, sentences[id], sentence, 1)
+	for i := range textSentences {
+		oldSentence := textSentences[i]
+		newSentence := fmt.Sprintf("%s <strike>[%s]</strike>", oldSentence, translatedSentences[i])
+		for _, r := range []rune{'.', '?', '!'} {
+			text = strings.Replace(text, oldSentence+string(r), newSentence+string(r), 1)
+		}
 	}
 	return text
 }

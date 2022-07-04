@@ -113,8 +113,8 @@ func (h *Handler) textForm(w http.ResponseWriter, r *http.Request) {
 		var maxerr error
 		if len(r.Form["split"]) > 0 {
 			parapraphs := splitOnParagraphs(text)
-			for id, paragraph := range parapraphs {
-				created := time.Now().Add(time.Hour * time.Duration(id*6))
+			for i, paragraph := range parapraphs {
+				created := time.Now().Add(time.Hour * time.Duration(i*6))
 				r := record{Title: title, Text: paragraph, When: created}
 				err := h.deutschFeed.addItem(r)
 				if err != nil {

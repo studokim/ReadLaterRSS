@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const sentenceBreakRegexp = `([\!\?\.] |[\!\?\.])`
+
 func convertLineBreaks(s string) string {
 	s = strings.TrimSpace(s)
 	s = strings.Replace(s, " ", " ", -1)
@@ -29,7 +31,7 @@ func splitOnParagraphs(text string) []string {
 func splitOnSentences(text string) []string {
 	paragraphs := splitOnParagraphs(text)
 	var sentences []string
-	r := regexp.MustCompile(`([\!\?\.] |[\!\?\.])`)
+	r := regexp.MustCompile(sentenceBreakRegexp)
 	for _, paragraph := range paragraphs {
 		splitted := r.Split(paragraph, -1)
 		for _, sentence := range splitted {
