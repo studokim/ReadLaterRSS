@@ -8,7 +8,13 @@ Just like [Pocket](https://getpocket.com/). But simpler.
 
 There are times when you want to save internet articles for later, but having a separate file or an app to read them feels uncomfortable. **ReadLaterRSS** helps to integrate your list into any RSS reader you already use.
 
-Since version 2, text-only feeds with automatic translation by [LibreTranslate](https://libretranslate.de/) are supported. Currently Deutsch to English only.
+Since version 2, text-only feeds with automatic translation powered by [Translate Shell](https://www.soimort.org/translate-shell) are supported. Currently to English only. Just follow these steps:
+
+```bash
+# cd to the directory from where you run ./ReadLaterRSS
+# place the ./get-translator.sh into it, then execute
+./get-translator.sh
+```
 
 ## Usage
 
