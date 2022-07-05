@@ -137,7 +137,8 @@ func (h *Handler) textForm(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 	var rss string
 	var err error
-	if h.getSelectedFeed(w, r) == "readLater" {
+	// choose the feed according to the query string
+	if r.URL.Query().Get("feed") == "readLater" {
 		rss, err = h.readLaterFeed.getRss()
 	} else {
 		rss, err = h.deutschFeed.getRss()

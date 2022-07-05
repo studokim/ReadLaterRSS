@@ -56,10 +56,7 @@ function hideTopHr() {
 }
 
 function selectFeed() {
-    option = readFeedCookie();
-    if (option) {
-        document.getElementById("feed").value = option;
-    }
+    document.getElementById("feed").value = readFeedCookie();
 }
 
 function changeFeed() {
@@ -70,8 +67,18 @@ function changeFeed() {
 }
 
 function readFeedCookie() {
-    return document.cookie
+    actual = document.cookie
         .split('; ')
         .find(row => row.startsWith('feed='))
         ?.split('=')[1];
+    if (!actual) {
+        return "readlater";
+    }
+    return actual;
+}
+
+function setRssParameter() {
+    var rss = document.getElementById("header-rss");
+    param = "?feed=" + readFeedCookie();
+    rss.href += param;
 }
