@@ -115,7 +115,7 @@ func (h *Handler) textForm(w http.ResponseWriter, r *http.Request) {
 			parapraphs := splitOnParagraphs(text)
 			count := len(parapraphs)
 			for i, paragraph := range parapraphs {
-				created := time.Now().Add(time.Hour * time.Duration(i*6))
+				created := time.Now().Add(time.Second * time.Duration(i))
 				r := record{Title: fmt.Sprintf("%s (%d/%d)", title, i+1, count), Text: paragraph, When: created}
 				err := h.deutschFeed.addItem(r)
 				if err != nil {
