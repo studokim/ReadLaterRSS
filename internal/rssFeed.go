@@ -14,13 +14,13 @@ type rssFeed struct {
 	history iHistory
 }
 
-func newFeed(title string, website string, description string, author string, parser iParser, history iHistory) *rssFeed {
+func newFeed(title string, website string, description string, author string, email string, parser iParser, history iHistory) *rssFeed {
 	f := rssFeed{
 		feed: &feeds.Feed{
 			Title:       title,
 			Link:        &feeds.Link{Href: website},
 			Description: description,
-			Author:      &feeds.Author{Name: author},
+			Author:      &feeds.Author{Name: author, Email: email},
 			Created:     time.Now(),
 			Items:       []*feeds.Item{},
 		},

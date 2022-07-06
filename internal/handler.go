@@ -20,7 +20,7 @@ type result struct {
 	Message string
 }
 
-func NewHandler(htmlFS embed.FS, website string, author string) *Handler {
+func NewHandler(htmlFS embed.FS, website string, author string, email string) *Handler {
 	history, err := newHistory("later")
 	if err != nil {
 		panic(err)
@@ -28,7 +28,7 @@ func NewHandler(htmlFS embed.FS, website string, author string) *Handler {
 	parser := newUrlParser()
 	title := "Read Later"
 	description := fmt.Sprintf("%s's list of saved links", author)
-	readLaterFeed := newFeed(title, website, description, author, parser, history)
+	readLaterFeed := newFeed(title, website, description, author, email, parser, history)
 
 	history, err = newHistory("deutsch")
 	if err != nil {
@@ -37,7 +37,7 @@ func NewHandler(htmlFS embed.FS, website string, author string) *Handler {
 	parser = newTextParser()
 	title = "Daily Deutsch"
 	description = fmt.Sprintf("%s's daily feed for learning deutsch", author)
-	deutschFeed := newFeed(title, website, description, author, parser, history)
+	deutschFeed := newFeed(title, website, description, author, email, parser, history)
 
 	return &Handler{
 		readLaterFeed: readLaterFeed,
