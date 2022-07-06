@@ -33,7 +33,7 @@ select,
     font-weight: bold;
     font-size: medium;
     text-decoration: none;
-    width: 10em;
+    width: 7em;
     padding: 8px 24px;
     text-align: center;
     border: none;
@@ -43,6 +43,10 @@ select,
 
 .button:hover {
     background-color: #037a4e;
+}
+
+select {
+    width: 11em;
 }
 
 /* placed after the button, to override its text-decoration */

@@ -11,9 +11,9 @@ import (
 )
 
 type Handler struct {
-	readLaterFeed *rssFeed
-	deutschFeed   *rssFeed
-	htmlFS        embed.FS
+	urlFeed  *rssFeed
+	textFeed *rssFeed
+	htmlFS   embed.FS
 }
 
 type result struct {
@@ -21,7 +21,7 @@ type result struct {
 }
 
 func NewHandler(htmlFS embed.FS, website string, author string, email string) *Handler {
-	history, err := newHistory("later")
+	history, err := newHistory("readlater")
 	if err != nil {
 		panic(err)
 	}
@@ -40,9 +40,9 @@ func NewHandler(htmlFS embed.FS, website string, author string, email string) *H
 	deutschFeed := newFeed(title, website, description, author, email, parser, history)
 
 	return &Handler{
-		readLaterFeed: readLaterFeed,
-		deutschFeed:   deutschFeed,
-		htmlFS:        htmlFS,
+		urlFeed:  readLaterFeed,
+		textFeed: deutschFeed,
+		htmlFS:   htmlFS,
 	}
 }
 
@@ -94,7 +94,7 @@ func (h *Handler) urlForm(w http.ResponseWriter, r *http.Request) {
 			context = ""
 		}
 		r := record{Url: url, Text: context, When: time.Now()}
-		err := h.readLaterFeed.addItem(r)
+		err := h.urlFeed.addItem(r)
 		if err != nil {
 			h.renderPage(w, "saveResult.html", result{Message: err.Error()})
 		} else {
@@ -117,14 +117,14 @@ func (h *Handler) textForm(w http.ResponseWriter, r *http.Request) {
 			for i, paragraph := range parapraphs {
 				created := time.Now().Add(time.Second * time.Duration(i))
 				r := record{Title: fmt.Sprintf("%s (%d/%d)", title, i+1, count), Text: paragraph, When: created}
-				err := h.deutschFeed.addItem(r)
+				err := h.textFeed.addItem(r)
 				if err != nil {
 					maxerr = err
 				}
 			}
 		} else {
 			r := record{Title: title, Text: text, When: time.Now()}
-			maxerr = h.deutschFeed.addItem(r)
+			maxerr = h.textFeed.addItem(r)
 		}
 		if maxerr != nil {
 			h.renderPage(w, "saveResult.html", result{Message: maxerr.Error()})
@@ -139,9 +139,9 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 	var err error
 	// choose the feed according to the query string
 	if r.URL.Query().Get("feed") == "readlater" {
-		rss, err = h.readLaterFeed.getRss()
+		rss, err = h.urlFeed.getRss()
 	} else {
-		rss, err = h.deutschFeed.getRss()
+		rss, err = h.textFeed.getRss()
 	}
 	if err != nil {
 		w.Write([]byte(err.Error()))
@@ -153,9 +153,9 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) explore(w http.ResponseWriter, r *http.Request) {
 	var rssItems []*feeds.Item
 	if h.getSelectedFeed(w, r) == "readlater" {
-		rssItems = h.readLaterFeed.getItems()
+		rssItems = h.urlFeed.getItems()
 	} else {
-		rssItems = h.deutschFeed.getItems()
+		rssItems = h.textFeed.getItems()
 	}
 	renderedItems := make([]renderedItem, len(rssItems))
 	for id, item := range rssItems {
