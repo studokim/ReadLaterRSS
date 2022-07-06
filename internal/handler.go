@@ -74,7 +74,7 @@ func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) save(w http.ResponseWriter, r *http.Request) {
-	if h.getSelectedFeed(w, r) == "readLater" {
+	if h.getSelectedFeed(w, r) == "readlater" {
 		h.urlForm(w, r)
 	} else {
 		h.textForm(w, r)
@@ -138,7 +138,7 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 	var rss string
 	var err error
 	// choose the feed according to the query string
-	if r.URL.Query().Get("feed") == "readLater" {
+	if r.URL.Query().Get("feed") == "readlater" {
 		rss, err = h.readLaterFeed.getRss()
 	} else {
 		rss, err = h.deutschFeed.getRss()
@@ -152,7 +152,7 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) explore(w http.ResponseWriter, r *http.Request) {
 	var rssItems []*feeds.Item
-	if h.getSelectedFeed(w, r) == "readLater" {
+	if h.getSelectedFeed(w, r) == "readlater" {
 		rssItems = h.readLaterFeed.getItems()
 	} else {
 		rssItems = h.deutschFeed.getItems()
