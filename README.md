@@ -38,4 +38,8 @@ All the articles are saved into `history.yml` with the timestamp, so you may res
 
 ## Screenshots
 
-![New RSS item](screenshots/add-item.png)
+![New URL item](screenshots/save-url.png)
+
+![New text item](screenshots/save-text.png)
+
+![Explore](screenshots/explore.png)
