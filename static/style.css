@@ -128,3 +128,13 @@ hr {
     background-color: #ccc;
     color: #ccc;
 }
+
+.blured {
+    color: transparent;
+    text-shadow: 0 0 0.5em rgba(0, 0, 0, 1);
+}
+
+.blured:hover {
+    color: #037a4e;
+    text-shadow: none;
+}

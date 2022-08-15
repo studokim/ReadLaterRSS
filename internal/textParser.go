@@ -38,7 +38,7 @@ func (p *textParser) getText(r record) string {
 	textSentences := splitOnSentences(r.Text)
 	translatedSentences := splitOnSentences(translated)
 	if len(textSentences) != len(translatedSentences) {
-		return fmt.Sprintf("%s<br><br><em>[%s]</em>", r.Text, translated)
+		return fmt.Sprintf("%s<br><br><strike>[%s]</strike>", r.Text, translated)
 	}
 	text := r.Text
 	for i := range textSentences {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/feeds"
@@ -187,8 +188,11 @@ func (h *Handler) explore(w http.ResponseWriter, r *http.Request) {
 	}
 	renderedItems := make([]renderedItem, len(items))
 	for id, item := range items {
+		text := item.Description
+		text = strings.ReplaceAll(text, "<strike>", "<span class=\"blured\">")
+		text = strings.ReplaceAll(text, "</strike>", "</span>")
 		renderedItems[id] = renderedItem{Id: item.Id, Title: item.Title, Url: item.Link.Href,
-			Text:    template.HTML(item.Description),
+			Text:    template.HTML(text),
 			Created: item.Created.Format(time.RFC822)}
 	}
 	h.renderPage(w, "explore.html", renderedItems)
