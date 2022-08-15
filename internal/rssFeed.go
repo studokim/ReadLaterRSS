@@ -1,62 +1,45 @@
 package internal
 
 import (
-	"sort"
 	"sync"
-	"time"
 
 	"github.com/gorilla/feeds"
 )
 
 type rssFeed struct {
-	feed    *feeds.Feed
-	parser  iParser
+	feed    *feed
 	history iHistory
 }
 
-func newFeed(title string, website string, description string, author string, email string, parser iParser, history iHistory) *rssFeed {
+func newRssFeed(title string, website string, description string, author string, email string, parser iParser, history iHistory) *rssFeed {
 	f := rssFeed{
-		feed: &feeds.Feed{
-			Title:       title,
-			Link:        &feeds.Link{Href: website},
-			Description: description,
-			Author:      &feeds.Author{Name: author, Email: email},
-			Created:     time.Now(),
-			Items:       []*feeds.Item{},
-		},
-		parser:  parser,
+		feed:    newFeed(title, website, description, author, email, parser),
 		history: history,
 	}
 	for item := range f.buildItemsFromHistory() {
-		f.feed.Items = append(f.feed.Items, item)
+		f.feed.feed.Items = append(f.feed.feed.Items, item)
 	}
 	return &f
 }
 
 func (f *rssFeed) addItem(r record) error {
-	item, err := f.parser.parse(r)
+	err := f.history.add(r)
 	if err != nil {
 		return err
 	}
-	f.feed.Items = append(f.feed.Items, item)
-	err = f.history.add(r)
-	return err
+	return f.feed.addItem(r)
+}
+
+func (f *rssFeed) getItems() []*feeds.Item {
+	return f.feed.getItems()
 }
 
 func (f *rssFeed) getRss() (string, error) {
-	rss, err := f.feed.ToRss()
+	rss, err := f.feed.feed.ToRss()
 	if err != nil {
 		return "", err
 	}
 	return rss, nil
-}
-
-func (f *rssFeed) getItems() []*feeds.Item {
-	items := f.feed.Items
-	sort.Slice(items, func(i, j int) bool {
-		return items[i].Id > items[j].Id
-	})
-	return items
 }
 
 func (f *rssFeed) buildItemsFromHistory() <-chan *feeds.Item {
@@ -68,7 +51,7 @@ func (f *rssFeed) buildItemsFromHistory() <-chan *feeds.Item {
 		wg.Add(1)
 		go func() {
 			for r := range records {
-				item, err := f.parser.parse(r)
+				item, err := f.feed.parser.parse(r)
 				if err == nil {
 					items <- item
 				}

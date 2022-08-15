@@ -72,7 +72,7 @@ function readFeedCookie() {
         .find(row => row.startsWith('feed='))
         ?.split('=')[1];
     if (!actual) {
-        return "readlater";
+        return "shared";
     }
     return actual;
 }

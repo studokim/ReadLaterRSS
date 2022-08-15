@@ -2,6 +2,7 @@ package internal
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -11,24 +12,34 @@ import (
 )
 
 type Handler struct {
-	urlFeed  *rssFeed
-	textFeed *rssFeed
-	htmlFS   embed.FS
+	sharedFeed    *feed
+	readlaterFeed *rssFeed
+	deutschFeed   *rssFeed
+	htmlFS        embed.FS
 }
 
 type result struct {
 	Message string
 }
 
+type button struct {
+	Verb string
+}
+
 func NewHandler(htmlFS embed.FS, website string, author string, email string) *Handler {
+	parser := newUrlParser()
+	title := "Shared"
+	description := fmt.Sprintf("%s's list of temporarily shared", author)
+	shareFeed := newFeed(title, website, description, author, email, parser)
+
 	history, err := newHistory("readlater")
 	if err != nil {
 		panic(err)
 	}
-	parser := newUrlParser()
-	title := "Read Later"
-	description := fmt.Sprintf("%s's list of saved links", author)
-	readLaterFeed := newFeed(title, website, description, author, email, parser, history)
+	parser = newUrlParser()
+	title = "Read Later"
+	description = fmt.Sprintf("%s's list of saved links", author)
+	readLaterFeed := newRssFeed(title, website, description, author, email, parser, history)
 
 	history, err = newHistory("deutsch")
 	if err != nil {
@@ -37,12 +48,13 @@ func NewHandler(htmlFS embed.FS, website string, author string, email string) *H
 	parser = newTextParser()
 	title = "Daily Deutsch"
 	description = fmt.Sprintf("%s's daily feed for learning deutsch", author)
-	deutschFeed := newFeed(title, website, description, author, email, parser, history)
+	deutschFeed := newRssFeed(title, website, description, author, email, parser, history)
 
 	return &Handler{
-		urlFeed:  readLaterFeed,
-		textFeed: deutschFeed,
-		htmlFS:   htmlFS,
+		sharedFeed:    shareFeed,
+		readlaterFeed: readLaterFeed,
+		deutschFeed:   deutschFeed,
+		htmlFS:        htmlFS,
 	}
 }
 
@@ -61,29 +73,32 @@ func (h *Handler) renderPage(w http.ResponseWriter, pageName string, content any
 		t.ExecuteTemplate(w, "template", content)
 	}
 }
-func (h *Handler) getSelectedFeed(w http.ResponseWriter, r *http.Request) string {
+
+func (h *Handler) getSelectedFeed(r *http.Request) string {
 	feed, err := r.Cookie("feed")
 	if err != nil {
-		return "readlater"
+		return "shared"
 	}
 	return feed.Value
 }
 
 func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
-	h.renderPage(w, "index.html", result{})
+	h.renderPage(w, "index.html", nil)
 }
 
 func (h *Handler) save(w http.ResponseWriter, r *http.Request) {
-	if h.getSelectedFeed(w, r) == "readlater" {
-		h.urlForm(w, r)
-	} else {
+	if h.getSelectedFeed(r) == "deutsch" {
 		h.textForm(w, r)
+	} else if h.getSelectedFeed(r) == "readlater" {
+		h.urlForm(w, r, button{Verb: "Save!"})
+	} else {
+		h.urlForm(w, r, button{Verb: "Share!"})
 	}
 }
 
-func (h *Handler) urlForm(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) urlForm(w http.ResponseWriter, r *http.Request, button button) {
 	if r.Method == "GET" {
-		h.renderPage(w, "saveUrl.html", result{})
+		h.renderPage(w, "saveUrl.html", button)
 	} else {
 		r.ParseForm()
 		url := r.Form["url"][0]
@@ -93,8 +108,16 @@ func (h *Handler) urlForm(w http.ResponseWriter, r *http.Request) {
 		} else {
 			context = ""
 		}
-		r := record{Url: url, Text: context, When: time.Now()}
-		err := h.urlFeed.addItem(r)
+		record := record{Url: url, Text: context, When: time.Now()}
+		feed := h.getSelectedFeed(r)
+		var err error
+		if feed == "readlater" {
+			err = h.readlaterFeed.addItem(record)
+		} else if feed == "shared" {
+			err = h.sharedFeed.addItem(record)
+		} else {
+			err = errors.New("selected feed doesn't implement adding to itself")
+		}
 		if err != nil {
 			h.renderPage(w, "saveResult.html", result{Message: err.Error()})
 		} else {
@@ -105,7 +128,7 @@ func (h *Handler) urlForm(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) textForm(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		h.renderPage(w, "saveText.html", result{})
+		h.renderPage(w, "saveText.html", nil)
 	} else {
 		r.ParseForm()
 		title := r.Form["title"][0]
@@ -117,14 +140,14 @@ func (h *Handler) textForm(w http.ResponseWriter, r *http.Request) {
 			for i, paragraph := range parapraphs {
 				created := time.Now().Add(time.Second * time.Duration(i))
 				r := record{Title: fmt.Sprintf("%s (%d/%d)", title, i+1, count), Text: paragraph, When: created}
-				err := h.textFeed.addItem(r)
+				err := h.deutschFeed.addItem(r)
 				if err != nil {
 					maxerr = err
 				}
 			}
 		} else {
 			r := record{Title: title, Text: text, When: time.Now()}
-			maxerr = h.textFeed.addItem(r)
+			maxerr = h.deutschFeed.addItem(r)
 		}
 		if maxerr != nil {
 			h.renderPage(w, "saveResult.html", result{Message: maxerr.Error()})
@@ -138,10 +161,13 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 	var rss string
 	var err error
 	// choose the feed according to the query string
-	if r.URL.Query().Get("feed") == "readlater" {
-		rss, err = h.urlFeed.getRss()
+	feed := r.URL.Query().Get("feed")
+	if feed == "deutsch" {
+		rss, err = h.deutschFeed.getRss()
+	} else if feed == "readlater" {
+		rss, err = h.readlaterFeed.getRss()
 	} else {
-		rss, err = h.textFeed.getRss()
+		err = errors.New("selected feed doesn't implement the RSS functionality")
 	}
 	if err != nil {
 		w.Write([]byte(err.Error()))
@@ -151,14 +177,16 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) explore(w http.ResponseWriter, r *http.Request) {
-	var rssItems []*feeds.Item
-	if h.getSelectedFeed(w, r) == "readlater" {
-		rssItems = h.urlFeed.getItems()
+	var items []*feeds.Item
+	if h.getSelectedFeed(r) == "readlater" {
+		items = h.readlaterFeed.getItems()
+	} else if h.getSelectedFeed(r) == "deutsch" {
+		items = h.deutschFeed.getItems()
 	} else {
-		rssItems = h.textFeed.getItems()
+		items = h.sharedFeed.getItems()
 	}
-	renderedItems := make([]renderedItem, len(rssItems))
-	for id, item := range rssItems {
+	renderedItems := make([]renderedItem, len(items))
+	for id, item := range items {
 		renderedItems[id] = renderedItem{Id: item.Id, Title: item.Title, Url: item.Link.Href,
 			Text:    template.HTML(item.Description),
 			Created: item.Created.Format(time.RFC822)}
