@@ -27,7 +27,7 @@ func main() {
 		fmt.Println("Loading history...")
 		h := internal.NewHandler(html, args[4], args[6], args[8])
 		h.RegisterEndpoints()
-		fmt.Printf("Serving at http://127.0.0.1:%s\n", args[2])
+		fmt.Printf("Serving at http://0.0.0.0:%s\n", args[2])
 		http.ListenAndServe(":"+args[2], nil)
 	} else {
 		fmt.Println("Usage: ./ReadLaterRSS --listen <port> --website <yoursite.com> --author <your.name> --email <you@yoursite.com>")
