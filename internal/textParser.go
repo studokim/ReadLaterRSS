@@ -35,12 +35,12 @@ func (p *textParser) getText(r record) string {
 	if err != nil {
 		return fmt.Sprintf("%s<br><br><em>[%s]</em>", r.Text, p.errorMessage)
 	}
-	textSentences := splitOnSentences(r.Text)
+	text := replaceDotsInDeutschDates(r.Text)
+	textSentences := splitOnSentences(text)
 	translatedSentences := splitOnSentences(translated)
 	if len(textSentences) != len(translatedSentences) {
-		return fmt.Sprintf("%s<br><br><strike>[%s]</strike>", r.Text, translated)
+		return fmt.Sprintf("%s<br><br><strike>[%s]</strike>", text, translated)
 	}
-	text := r.Text
 	for i := range textSentences {
 		oldSentence := textSentences[i]
 		newSentence := fmt.Sprintf("%s <strike>[%s]</strike>", oldSentence, translatedSentences[i])

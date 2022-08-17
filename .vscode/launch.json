@@ -16,7 +16,9 @@
                 "-s",
                 "https://example.com",
                 "-a",
-                "author"
+                "author",
+                "-m",
+                "you@example.com",
             ]
         }
     ]
