@@ -31,7 +31,7 @@ func (p *textParser) parse(r record) (*feeds.Item, error) {
 }
 
 func (p *textParser) getText(r record) string {
-	translated, err := p.translator.translate(r.Text)
+	translated, err := p.translator.translate(removeParagraphBreaks(r.Text))
 	if err != nil {
 		return fmt.Sprintf("%s<br><br><em>[%s]</em>", r.Text, p.errorMessage)
 	}
@@ -44,8 +44,8 @@ func (p *textParser) getText(r record) string {
 	for i := range textSentences {
 		oldSentence := textSentences[i]
 		newSentence := fmt.Sprintf("%s <strike>[%s]</strike>", oldSentence, translatedSentences[i])
-		for _, r := range []rune{'.', '?', '!'} {
-			text = strings.Replace(text, oldSentence+string(r), newSentence+string(r), 1)
+		for _, r := range []string{".", "?", "!", "<br>"} {
+			text = strings.Replace(text, oldSentence+r, newSentence+r, 1)
 		}
 	}
 	return text

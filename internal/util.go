@@ -15,6 +15,10 @@ func convertLineBreaks(s string) string {
 	return s
 }
 
+func removeParagraphBreaks(s string) string {
+	return strings.Replace(s, "<br>", ". ", -1)
+}
+
 func splitOnParagraphs(text string) []string {
 	var paragraphs []string
 	splitted := strings.Split(text, "<br>")
@@ -28,7 +32,7 @@ func splitOnParagraphs(text string) []string {
 
 func splitOnSentences(text string) []string {
 	var sentences []string
-	sentenceBreakRegexp := `([.?!]|\.{3})(\s|<br>|$)+`
+	sentenceBreakRegexp := `(([.?!]|\.{3})(\s|<br>|$)+|<br>+|$)`
 	r := regexp.MustCompile(sentenceBreakRegexp)
 	splitted := r.Split(text, -1)
 	for _, sentence := range splitted {
