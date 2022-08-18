@@ -69,12 +69,11 @@ function changeFeed() {
 function readFeedCookie() {
     actual = document.cookie
         .split('; ')
-        .find(row => row.startsWith('feed='))
-        ?.split('=')[1];
+        .find(row => row.startsWith('feed='));
     if (!actual) {
         return "shared";
     }
-    return actual;
+    return actual.split('=')[1];
 }
 
 function setRssParameter() {
