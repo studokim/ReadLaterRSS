@@ -1,7 +1,6 @@
 {{define "content"}}
 
 {{range .}}
-<hr id="hr_{{.Id}}">
 <div class="row" style="justify-content:space-between;">
     <div>
         <p><strong>{{.Title}}</strong></p>
@@ -16,11 +15,14 @@
     <p>{{.Text}}</p>
     <p align="right"><em>{{.Created}}</em></p>
 </div>
+<hr>
 {{end}}
+<div class="row">
+    <p><em>Nothing left here. Try to <a href="/save">add</a>.</em></p>
+</div>
 
 <script>
     setActiveHeaderItem("header-explore");
     hideReadButtons();
-    hideTopHr();
 </script>
 {{end}}
