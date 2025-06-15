@@ -10,14 +10,14 @@
         </div>
         <div class="row">
             <label for="describe">I want to provide some&nbsp;context</label>
-            <input type="checkbox" id="describe" name="describe" onclick="showContext()">
+            <input type="checkbox" id="describe" name="describe" onclick="toggleContext()">
         </div>
         <div class="row">
             <textarea rows="3" id="context" name="context" style="resize:vertical; display:none;"
                 placeholder="Description goes here..."></textarea>
         </div>
         <div class="row">
-            <input type="submit" value={{.Verb}} class="button">
+            <input type="submit" value="Save!" class="button">
         </div>
     </form>
 </div>

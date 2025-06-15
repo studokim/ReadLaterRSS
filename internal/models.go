@@ -1,21 +1,35 @@
 package internal
 
 import (
-	"html/template"
 	"time"
+
+	"github.com/google/uuid"
 )
 
-type record struct {
-	Title string
-	Url   string
-	Text  string
-	When  time.Time
+type feedType string
+
+const (
+	url  feedType = "url"
+	text feedType = "text"
+)
+
+type feed struct {
+	Title       string
+	Description string
+	Author      string
+	Email       string
+	FeedType    feedType
 }
 
-type renderedItem struct {
-	Id      string
-	Title   string
-	Url     string
-	Text    template.HTML
-	Created string
+const (
+	deleted string = "[deleted]"
+)
+
+type item struct {
+	FeedTitle string
+	Id        uuid.UUID
+	Title     string
+	Created   time.Time
+	Url       string
+	Text      string
 }

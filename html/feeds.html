@@ -1,0 +1,17 @@
+{{define "content"}}
+
+{{range .}}
+<div class="container">
+    <div class="row">
+        <p>Feed <strong>{{.Title}}</strong> of type {{.FeedType}} by <a href="mailto:{{.Email}}">{{.Author}}</a></p>
+    </div>
+    <div class="row">
+        <p>Description: <em>{{.Description}}</em></p>
+    </div>
+    {{end}}
+</div>
+
+<script>
+    setActiveHeaderItem("header-feeds");
+</script>
+{{end}}

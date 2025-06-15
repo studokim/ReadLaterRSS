@@ -1,21 +1,21 @@
 {{define "content"}}
 
 {{range .}}
-<div class="row" style="justify-content:space-between;">
-    <div>
+<div id="item_{{.Id}}">
+    <div class="row" style="justify-content:space-between;">
+        <button type="button" class="button" style="width: 4em;" onclick="deleteItem('{{.Id}}')">X</button>
         <p><strong>{{.Title}}</strong></p>
+        <div class="column">
+            <button id="spoilerButton_{{.Id}}" type="button" class="button" onclick="toggleSpoiler('{{.Id}}')">Show</button>
+            <a {{if eq .Url ""}}style="display: none;"{{end}} href="{{.Url}}" name="read" class="button">Read</a>
+        </div>
     </div>
-    <div class="column">
-        <button id="button_{{.Id}}" name="button" type="button" class="button"
-            onclick="toggleSpoiler('{{.Id}}')">Show</button>
-        <a href="{{.Url}}" name="read" class="button">Read</a>
+    <div class="row" id="spoiler_{{.Id}}" name="spoiler" style="text-align:justify; display:none">
+        <p>{{.Text}}</p>
+        <p align="right"><em>{{.Created}}</em></p>
     </div>
 </div>
-<div class="row" id="spoiler_{{.Id}}" name="spoiler" style="text-align:justify; display:none">
-    <p>{{.Text}}</p>
-    <p align="right"><em>{{.Created}}</em></p>
-</div>
-<hr>
+<hr id="hr_{{.Id}}">
 {{end}}
 <div class="row">
     <p><em>Nothing left here. Try to <a href="/save">add</a>.</em></p>
@@ -23,6 +23,5 @@
 
 <script>
     setActiveHeaderItem("header-explore");
-    hideReadButtons();
 </script>
 {{end}}

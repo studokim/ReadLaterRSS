@@ -18,22 +18,21 @@
             <a id="header-explore" name="header" href="explore" class="button">Explore</a>
         </div>
         <div class="header-group">
-            <a id="header-rss" name="header" href="rss" class="button">RSS</a>
-            <select id="feed" name="feed" size="1" onchange="changeFeed()">
-                <option selected="selected" value="shared">Shared</option>
-                <option value="readlater">Read Later</option>
-                <option value="deutsch">Daily Deutsch</option>
+            <a id="header-rss" name="header" href="rss?feed={{.SelectedFeed.Title}}" class="button">RSS</a>
+            <a id="header-feeds" name="header" href="feeds" class="button">Feeds</a>
+        </div>
+        <div class="header-group">
+            <select id="header-feed-selector" name="feed-selector" size="1" onchange="selectFeed()">
+                <option selected value="{{.SelectedFeed.Title}}">{{.SelectedFeed.Title}}</option>
+                {{range .FeedSelector}}
+                <option value="{{.Title}}">{{.Title}}</option>
+                {{end}}
             </select>
         </div>
     </div>
     <div class="content">
-        {{template "content" .}}
+        {{template "content" .Content}}
     </div>
-
-    <script>
-        selectFeed();
-        setRssParameter();
-    </script>
 </body>
 
 </html>

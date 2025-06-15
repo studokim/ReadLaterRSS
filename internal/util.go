@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"os"
 	"regexp"
 	"strings"
 )
@@ -17,17 +16,6 @@ func convertLineBreaks(s string) string {
 
 func removeParagraphBreaks(s string) string {
 	return strings.Replace(s, "<br>", ". ", -1)
-}
-
-func splitOnParagraphs(text string) []string {
-	var paragraphs []string
-	splitted := strings.Split(text, "<br>")
-	for _, paragraph := range splitted {
-		if len(paragraph) != 0 {
-			paragraphs = append(paragraphs, paragraph)
-		}
-	}
-	return paragraphs
 }
 
 func splitOnSentences(text string) []string {
@@ -49,13 +37,12 @@ func replaceDotsInDeutschDates(text string) string {
 	return r.ReplaceAllString(text, "$1 $2")
 }
 
-func readFile(fileName string) ([]byte, error) {
-	if _, err := os.Stat(fileName); err != nil {
-		os.Create(fileName)
+func without(items []feed, item feed) []feed {
+	var result []feed
+	for _, it := range items {
+		if it.Title != item.Title {
+			result = append(result, it)
+		}
 	}
-	return os.ReadFile(fileName)
-}
-
-func openFileAppend(fileName string) (*os.File, error) {
-	return os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND, 0644)
+	return result
 }
