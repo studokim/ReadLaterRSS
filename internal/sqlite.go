@@ -57,7 +57,7 @@ func (s Sqlite) migrate() error {
 		if err != nil {
 			return err
 		}
-		f := feed{Title: "Default", Description: "Automatically created feed", Author: "ReadLaterRSS", Email: "-", FeedType: url}
+		f := feed{Title: "Default", Description: "Automatically created feed", Author: "ReadLaterRSS", Email: "-", FeedType: urlType}
 		_, err := db.Exec("insert into feed(title, description, author, email, feedType) values(?, ?, ?, ?, ?)", f.Title, f.Description, f.Author, f.Email, f.FeedType)
 		if err != nil {
 			return err

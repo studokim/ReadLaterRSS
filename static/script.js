@@ -37,11 +37,11 @@ function toggleSpoiler(id) {
 };
 
 function toggleContext() {
-    var context = document.getElementById("context");
-    if (document.getElementById("describe").checked == true) {
-        context.style.display = "block";
+    var text = document.getElementById("text");
+    if (document.getElementById("context").checked == true) {
+        text.style.display = "block";
     } else {
-        context.style.display = "none";
+        text.style.display = "none";
     }
 }
 

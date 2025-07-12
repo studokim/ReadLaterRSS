@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -45,4 +47,22 @@ func without(items []feed, item feed) []feed {
 		}
 	}
 	return result
+}
+
+func getAtMostOne(form url.Values, param string) (string, error) {
+	switch len(form[param]) {
+	case 0:
+		return "", nil
+	case 1:
+		return form[param][0], nil
+	default:
+		return "", fmt.Errorf("expected at most one `%s` value, got: %d", param, len(form[param]))
+	}
+}
+
+func getSingle(form url.Values, param string) (string, error) {
+	if len(form[param]) != 1 {
+		return "", fmt.Errorf("expected a single `%s` value, got: %d", param, len(form[param]))
+	}
+	return form[param][0], nil
 }

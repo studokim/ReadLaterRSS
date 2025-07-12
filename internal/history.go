@@ -67,7 +67,7 @@ func (h *history) getFeeds() ([]feed, error) {
 		if err != nil {
 			return nil, err
 		}
-		if feedType != url && feedType != text {
+		if feedType != urlType && feedType != textType {
 			return nil, err
 		}
 		feeds = append(feeds, feed{Title: title, Description: description, Author: author, Email: email, FeedType: feedType})

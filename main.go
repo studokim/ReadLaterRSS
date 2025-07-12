@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/studokim/ReadLaterRSS/internal"
 )
@@ -43,7 +44,7 @@ func main() {
 	args := os.Args
 	if len(args) == 5 &&
 		(args[1] == "--listen" || args[1] == "-l") &&
-		(args[3] == "--website" || args[3] == "-s") {
+		(args[3] == "--website" || args[3] == "-s") && (strings.HasPrefix(args[4], "http://") || strings.HasPrefix(args[4], "https://")) {
 		port := args[2]
 		rootUrl := args[4]
 
@@ -65,9 +66,8 @@ func main() {
 			}
 		}
 
-		err = http.ListenAndServe("0.0.0.0:"+port, nil)
-		panic(err) // always non-nil
+		err = http.ListenAndServe("0.0.0.0:"+port, nil) // always non-nil
 	} else {
-		fmt.Println("Usage: ./ReadLaterRSS --listen|-l <port> --website|-s <example.com>")
+		fmt.Println("Usage: ./ReadLaterRSS --listen|-l <port> --website|-s <https://example.com>")
 	}
 }

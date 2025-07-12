@@ -5,15 +5,15 @@
             <label for="url">Paste the link:</label>
         </div>
         <div class="row">
-            <input type="url" id="url" name="url" required="required" autofocus
+            <input id="url" name="url" type="url" required="required" autofocus
                 placeholder="https://example.com/interesting-article">
         </div>
         <div class="row">
-            <label for="describe">I want to provide some&nbsp;context</label>
-            <input type="checkbox" id="describe" name="describe" onclick="toggleContext()">
+            <label for="context">I want to provide some&nbsp;context</label>
+            <input id="context" type="checkbox" onclick="toggleContext()">
         </div>
         <div class="row">
-            <textarea rows="3" id="context" name="context" style="resize:vertical; display:none;"
+            <textarea id="text" name="text" rows="3" style="resize:vertical; display:none;"
                 placeholder="Description goes here..."></textarea>
         </div>
         <div class="row">

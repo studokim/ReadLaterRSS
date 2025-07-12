@@ -2,21 +2,19 @@ package internal
 
 import (
 	"embed"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/feeds"
 )
 
 type Handler struct {
-	rootUrl    string
-	htmlFS     embed.FS
-	toRssPipes map[feedType]iToRssPipe
-	history    history
+	rootUrl string
+	htmlFS  embed.FS
+	history history
+	pipe    pipe
 }
 
 type result struct {
@@ -29,10 +27,10 @@ func NewHandler(rootUrl string, htmlFS embed.FS) (*Handler, error) {
 		return nil, err
 	}
 	handler := &Handler{
-		rootUrl:    rootUrl,
-		htmlFS:     htmlFS,
-		toRssPipes: map[feedType]iToRssPipe{url: newUrlToRssPipe(), text: newTextToRssPipe()},
-		history:    history,
+		rootUrl: rootUrl,
+		htmlFS:  htmlFS,
+		history: history,
+		pipe:    newPipe(),
 	}
 	handler.registerEndpoints()
 	return handler, nil
@@ -89,85 +87,21 @@ func (h *Handler) getSelectedFeed(r *http.Request) (feed, error) {
 	if titleFromUrl != "" {
 		return h.history.getFeed(titleFromUrl)
 	}
-
 	title, err := r.Cookie("feed")
-	if err != nil && err.Error() == "http: named cookie not present" {
+	if err == nil {
+		return h.history.getFeed(title.Value)
+	}
+	if err.Error() == "http: named cookie not present" {
 		feeds, err := h.history.getFeeds()
 		if err == nil && len(feeds) > 0 {
 			return feeds[0], nil
 		}
 	}
-	if err != nil {
-		return feed{}, err
-	}
-	return h.history.getFeed(title.Value)
+	return feed{}, err
 }
 
 func (h *Handler) index(w http.ResponseWriter, r *http.Request) {
 	h.renderPage(w, r, "index.html", nil)
-}
-
-func (h *Handler) saveUrl(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		h.renderPage(w, r, "saveUrl.html", nil)
-	} else {
-		r.ParseForm()
-		title := "[untitled]"
-		url := r.Form["url"][0]
-		if !(strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://")) {
-			url = "http://" + url
-		}
-		text := ""
-		if len(r.Form["describe"]) > 0 {
-			text = convertLineBreaks(r.Form["context"][0])
-		}
-
-		feed, err := h.getSelectedFeed(r)
-		if err != nil {
-			h.handle(w, err)
-			return
-		}
-		item := item{FeedTitle: feed.Title, Id: uuid.New(), Title: title, Created: time.Now(), Url: url, Text: text}
-		rssItem, err := h.toRssPipes[feed.FeedType].pipe(item)
-		if err != nil {
-			h.handle(w, err)
-			return
-		}
-		item.Title = rssItem.Title
-		item.Text = rssItem.Description
-		err = h.history.addItem(item)
-
-		if err != nil {
-			h.renderPage(w, r, "saveResult.html", result{Message: err.Error()})
-		} else {
-			h.renderPage(w, r, "saveResult.html", result{Message: "Done!"})
-		}
-	}
-}
-
-func (h *Handler) saveText(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		h.renderPage(w, r, "saveText.html", nil)
-	} else {
-		r.ParseForm()
-		title := r.Form["title"][0]
-		url := ""
-		text := convertLineBreaks(r.Form["text"][0])
-
-		feed, err := h.getSelectedFeed(r)
-		if err != nil {
-			h.handle(w, err)
-			return
-		}
-		item := item{FeedTitle: feed.Title, Id: uuid.New(), Title: title, Created: time.Now(), Url: url, Text: text}
-		err = h.history.addItem(item)
-
-		if err != nil {
-			h.renderPage(w, r, "saveResult.html", result{Message: err.Error()})
-		} else {
-			h.renderPage(w, r, "saveResult.html", result{Message: "Done!"})
-		}
-	}
 }
 
 func (h *Handler) save(w http.ResponseWriter, r *http.Request) {
@@ -176,11 +110,31 @@ func (h *Handler) save(w http.ResponseWriter, r *http.Request) {
 		h.handle(w, err)
 		return
 	}
-	switch feed.FeedType {
-	case url:
-		h.saveUrl(w, r)
-	case text:
-		h.saveText(w, r)
+	if r.Method == "GET" {
+		switch feed.FeedType {
+		case urlType:
+			h.renderPage(w, r, "saveUrl.html", nil)
+		case textType:
+			h.renderPage(w, r, "saveText.html", nil)
+		}
+	} else {
+		err := r.ParseForm()
+		if err != nil {
+			h.renderPage(w, r, "saveResult.html", result{Message: err.Error()})
+			return
+		}
+		item, err := h.pipe.formToItem(feed, r.Form)
+		if err != nil {
+			h.renderPage(w, r, "saveResult.html", result{Message: err.Error()})
+			return
+		}
+		err = h.history.addItem(item)
+		if err != nil {
+			h.renderPage(w, r, "saveResult.html", result{Message: err.Error()})
+			return
+		}
+		h.renderPage(w, r, "saveResult.html", result{Message: "Done!"})
+		log.Println("Saved", item.Id)
 	}
 }
 
@@ -201,27 +155,19 @@ func (h *Handler) explore(w http.ResponseWriter, r *http.Request) {
 			h.handle(w, err)
 			return
 		}
-		log.Printf("Deleted: %s\n", id)
+		log.Println("Deleted", id)
 	} else {
 		feed, err := h.getSelectedFeed(r)
 		if err != nil {
 			h.handle(w, err)
 			return
 		}
-		itemsNotFiltered, err := h.history.getItems(feed)
+		items, err := h.history.getItems(feed)
 		if err != nil {
 			h.handle(w, err)
 			return
 		}
-		var items []item
-		for _, item := range itemsNotFiltered {
-			if item.Title == deleted {
-				continue
-			}
-			item.Text = strings.ReplaceAll(item.Text, "<strike>", "<span class='blured'>")
-			item.Text = strings.ReplaceAll(item.Text, "</strike>", "</span>")
-			items = append(items, item)
-		}
+		items = h.pipe.itemsToExplore(items)
 		h.renderPage(w, r, "explore.html", items)
 	}
 }
@@ -237,30 +183,7 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 		h.handle(w, err)
 		return
 	}
-	var rssItems []*feeds.Item
-	for _, item := range items {
-		rssItem, err := h.toRssPipes[feed.FeedType].pipe(item)
-		if err != nil {
-			h.handle(w, err)
-			return
-		}
-		rssItems = append(rssItems, rssItem)
-		if item.Title == "" {
-			item.Title = rssItem.Title // TODO
-		}
-		if item.Text == "" {
-			item.Text = rssItem.Description // TODO
-		}
-	}
-	rssFeed := feeds.Feed{
-		Title:       feed.Title,
-		Link:        &feeds.Link{Href: h.rootUrl + "/rss"},
-		Description: feed.Description,
-		Author:      &feeds.Author{Name: feed.Author, Email: feed.Email},
-		Created:     time.Now(),
-		Items:       rssItems,
-	}
-	rss, err := rssFeed.ToRss()
+	rss, err := h.pipe.feedToRss(feed, fmt.Sprintf("%s/rss?feed=%s", h.rootUrl, feed.Title), items)
 	if err != nil {
 		h.handle(w, err)
 		return

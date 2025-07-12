@@ -6,11 +6,18 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	deleted    string = "[deleted]"
+	notitle    string = "[notitle]"
+	noauthor   string = "[noauthor]"
+	deletedurl string = "https://example.com"
+)
+
 type feedType string
 
 const (
-	url  feedType = "url"
-	text feedType = "text"
+	urlType  feedType = "url"
+	textType feedType = "text"
 )
 
 type feed struct {
@@ -20,10 +27,6 @@ type feed struct {
 	Email       string
 	FeedType    feedType
 }
-
-const (
-	deleted string = "[deleted]"
-)
 
 type item struct {
 	FeedTitle string
