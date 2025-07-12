@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	_ "github.com/glebarez/go-sqlite"
 )
@@ -41,7 +42,7 @@ func (s Sqlite) migrate() error {
 	}
 
 	if version < 1 {
-		fmt.Println("Migrating: creating new db from scratch")
+		log.Println("Migrating: creating new db from scratch")
 		// https://stackoverflow.com/a/65743498
 		_, err = db.Exec(`PRAGMA writable_schema = 1;
 				          DELETE FROM sqlite_master;
@@ -69,7 +70,7 @@ func (s Sqlite) migrate() error {
 		return err
 
 	} else if version == 1 {
-		fmt.Println("Not migrating, as already on version=1")
+		log.Println("Not migrating, as already on version=1")
 		return nil
 	} else {
 		return errors.New(fmt.Sprint("Expected version <= 1, got", version))

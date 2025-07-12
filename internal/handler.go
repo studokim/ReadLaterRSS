@@ -2,8 +2,8 @@ package internal
 
 import (
 	"embed"
-	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -47,7 +47,8 @@ func (h *Handler) registerEndpoints() {
 }
 
 func (h *Handler) handle(w http.ResponseWriter, err error) {
-	fmt.Println(err)
+	log.Println(err)
+	w.WriteHeader(http.StatusInternalServerError)
 	w.Write([]byte(err.Error()))
 }
 
@@ -55,14 +56,17 @@ func (h *Handler) renderPage(w http.ResponseWriter, r *http.Request, pageName st
 	t, err := template.ParseFS(h.htmlFS, "html/template.html", "html/"+pageName)
 	if err != nil {
 		h.handle(w, err)
+		return
 	} else {
 		selectedFeed, err := h.getSelectedFeed(r)
 		if err != nil {
 			h.handle(w, err)
+			return
 		}
 		feeds, err := h.history.getFeeds()
 		if err != nil {
 			h.handle(w, err)
+			return
 		}
 		err = t.ExecuteTemplate(w, "template", struct {
 			SelectedFeed feed
@@ -75,6 +79,7 @@ func (h *Handler) renderPage(w http.ResponseWriter, r *http.Request, pageName st
 		})
 		if err != nil {
 			h.handle(w, err)
+			return
 		}
 	}
 }
@@ -120,11 +125,13 @@ func (h *Handler) saveUrl(w http.ResponseWriter, r *http.Request) {
 		feed, err := h.getSelectedFeed(r)
 		if err != nil {
 			h.handle(w, err)
+			return
 		}
 		item := item{FeedTitle: feed.Title, Id: uuid.New(), Title: title, Created: time.Now(), Url: url, Text: text}
 		rssItem, err := h.toRssPipes[feed.FeedType].pipe(item)
 		if err != nil {
 			h.handle(w, err)
+			return
 		}
 		item.Title = rssItem.Title
 		item.Text = rssItem.Description
@@ -150,6 +157,7 @@ func (h *Handler) saveText(w http.ResponseWriter, r *http.Request) {
 		feed, err := h.getSelectedFeed(r)
 		if err != nil {
 			h.handle(w, err)
+			return
 		}
 		item := item{FeedTitle: feed.Title, Id: uuid.New(), Title: title, Created: time.Now(), Url: url, Text: text}
 		err = h.history.addItem(item)
@@ -166,10 +174,12 @@ func (h *Handler) save(w http.ResponseWriter, r *http.Request) {
 	feed, err := h.getSelectedFeed(r)
 	if err != nil {
 		h.handle(w, err)
+		return
 	}
-	if feed.FeedType == url {
+	switch feed.FeedType {
+	case url:
 		h.saveUrl(w, r)
-	} else if feed.FeedType == text {
+	case text:
 		h.saveText(w, r)
 	}
 }
@@ -179,23 +189,29 @@ func (h *Handler) explore(w http.ResponseWriter, r *http.Request) {
 		id, err := uuid.Parse(r.URL.Query().Get("delete"))
 		if err != nil {
 			h.handle(w, err)
+			return
 		}
 		feed, err := h.getSelectedFeed(r)
 		if err != nil {
 			h.handle(w, err)
+			return
 		}
 		err = h.history.deleteItem(item{FeedTitle: feed.Title, Id: id})
 		if err != nil {
 			h.handle(w, err)
+			return
 		}
+		log.Printf("Deleted: %s\n", id)
 	} else {
 		feed, err := h.getSelectedFeed(r)
 		if err != nil {
 			h.handle(w, err)
+			return
 		}
 		itemsNotFiltered, err := h.history.getItems(feed)
 		if err != nil {
 			h.handle(w, err)
+			return
 		}
 		var items []item
 		for _, item := range itemsNotFiltered {
@@ -214,16 +230,19 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 	feed, err := h.getSelectedFeed(r)
 	if err != nil {
 		h.handle(w, err)
+		return
 	}
 	items, err := h.history.getItems(feed)
 	if err != nil {
 		h.handle(w, err)
+		return
 	}
 	var rssItems []*feeds.Item
 	for _, item := range items {
 		rssItem, err := h.toRssPipes[feed.FeedType].pipe(item)
 		if err != nil {
 			h.handle(w, err)
+			return
 		}
 		rssItems = append(rssItems, rssItem)
 		if item.Title == "" {
@@ -244,6 +263,7 @@ func (h *Handler) rss(w http.ResponseWriter, r *http.Request) {
 	rss, err := rssFeed.ToRss()
 	if err != nil {
 		h.handle(w, err)
+		return
 	}
 	w.Write([]byte(rss))
 }
@@ -252,6 +272,7 @@ func (h *Handler) feeds(w http.ResponseWriter, r *http.Request) {
 	feeds, err := h.history.getFeeds()
 	if err != nil {
 		h.handle(w, err)
+		return
 	}
 	h.renderPage(w, r, "feeds.html", feeds)
 }

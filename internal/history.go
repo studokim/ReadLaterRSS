@@ -52,24 +52,25 @@ func (h *history) getFeed(title string) (feed, error) {
 }
 
 func (h *history) getFeeds() ([]feed, error) {
-	res, err := h.db.Query("select title, author, email, feedType from feed")
+	res, err := h.db.Query("select title, description, author, email, feedType from feed")
 	if err != nil {
 		return nil, err
 	}
 	var feeds []feed
 	for res.Next() {
 		var title string
+		var description string
 		var author string
 		var email string
 		var feedType feedType
-		err = res.Scan(&title, &author, &email, &feedType)
+		err = res.Scan(&title, &description, &author, &email, &feedType)
 		if err != nil {
 			return nil, err
 		}
 		if feedType != url && feedType != text {
 			return nil, err
 		}
-		feeds = append(feeds, feed{Title: title, Author: author, Email: email, FeedType: feedType})
+		feeds = append(feeds, feed{Title: title, Description: description, Author: author, Email: email, FeedType: feedType})
 	}
 	return feeds, nil
 }
@@ -81,7 +82,7 @@ func (h *history) addItem(r item) error {
 
 func (h *history) deleteItem(r item) error {
 	// RSS doesn't allow to delete items, because RSS readers won't be able to distinguish between deleted and just too old items
-	_, err := h.db.Exec("update item set title='?', url='', text='' where id=?", deleted, r.Id)
+	_, err := h.db.Exec("update item set title=?, url='', text='' where id=?", deleted, r.Id)
 	return err
 }
 
@@ -102,7 +103,7 @@ func (h *history) getItems(f feed) ([]item, error) {
 		if err != nil {
 			return nil, err
 		}
-		created, err = time.Parse("2006-01-02T15:04:05+03:00", createdStr)
+		created, err = time.Parse("2006-01-02T15:04:05.999999999Z07:00", createdStr)
 		if err != nil {
 			return nil, err
 		}
