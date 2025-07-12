@@ -2,17 +2,14 @@
 
 {{range .}}
 <div id="feed_{{.Title}}">
-    <div class="row">
-        <p>Feed: <strong>{{.Title}}</strong> by <a href="mailto:{{.Email}}">{{.Author}}</a> of type {{.FeedType}}</p>
-    </div>
-    <div class="row">
-        <p>Description: <em>{{.Description}}</em></p>
+    <div class="row" style="text-align: center;">
+        <p>Feed: <strong>{{.Title}}</strong> by <a href="mailto:{{.Email}}">{{.Author}}</a> of type {{.FeedType}}<br>Description: <em>{{.Description}}</em></p>
     </div>
 </div>
 <hr>
 {{end}}
-<div class="row">
-    <p><em>You can add, remove or edit the feeds directly in the SQLite database.</em></p>
+<div class="row" style="text-align: center;">
+    <p><em>You can add, remove or edit the feeds directly in the SQLite database.<br>Translation is configured there too.</em></p>
 </div>
 
 <script>

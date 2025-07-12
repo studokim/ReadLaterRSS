@@ -73,6 +73,10 @@ select {
     width: 11em;
 }
 
+select option:checked {
+    display: none;
+}
+
 /* placed after the button, to override its text-decoration */
 .active {
     text-decoration: underline;

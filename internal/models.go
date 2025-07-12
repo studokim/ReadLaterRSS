@@ -36,3 +36,9 @@ type item struct {
 	Url       string
 	Text      string
 }
+
+type translate struct {
+	FeedTitle string
+	LangFrom  string
+	LangTo    string
+}

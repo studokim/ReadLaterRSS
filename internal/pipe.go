@@ -16,8 +16,12 @@ type pipe struct {
 	translator translator
 }
 
-func newPipe() pipe {
-	return pipe{cache: make(map[string]*goscraper.Document), translator: newTranslator()}
+func newPipe() (pipe, error) {
+	translator, err := newTranslator()
+	if err != nil {
+		return pipe{}, err
+	}
+	return pipe{cache: make(map[string]*goscraper.Document), translator: translator}, nil
 }
 
 func (p pipe) formToItem(f feed, form url.Values) (item, error) {
@@ -47,7 +51,7 @@ func (p pipe) formToItem(f feed, form url.Values) (item, error) {
 			if err != nil {
 				return item{}, err
 			}
-			return item{FeedTitle: f.Title, Id: uuid.New(), Title: title, Created: time.Now(), Url: "", Text: p.getTextItemText(text)}, nil
+			return item{FeedTitle: f.Title, Id: uuid.New(), Title: title, Created: time.Now(), Url: "", Text: p.getTextItemText(f.Title, text)}, nil
 		}
 	}
 	return item{}, nil
@@ -110,25 +114,30 @@ func (p pipe) getUrlItemText(url string, userText string) string {
 	return fmt.Sprintf("%s<br><br>%s", userText, doc.Preview.Description)
 }
 
-func (p pipe) getTextItemText(userText string) string {
-	translated, err := p.translator.translate(removeParagraphBreaks(userText))
+func (p pipe) getTextItemText(feedTitle string, userText string) string {
+	if !p.translator.shouldTranslate(feedTitle) {
+		return userText
+	}
+
+	userText = fixCommonParsingProblems(userText)
+	translatedText, err := p.translator.translate(feedTitle, userText)
 	if err != nil {
-		return fmt.Sprintf("%s<br><br><em>[%s]</em>", userText, "translator unreachable")
+		return fmt.Sprintf("%s<br><br>[%s]", userText, err)
 	}
-	text := replaceDotsInDeutschDates(userText)
-	textSentences := splitOnSentences(text)
-	translatedSentences := splitOnSentences(translated)
-	if len(textSentences) != len(translatedSentences) {
-		return fmt.Sprintf("%s<br><br><strike>[%s]</strike>", text, translated)
+	userSentences := splitOnSentences(userText)
+	translatedSentences := splitOnSentences(translatedText)
+	if len(userSentences) != len(translatedSentences) {
+		return fmt.Sprintf("%s<br><br><strike>[%s]</strike>", userText, translatedText)
 	}
-	for i := range textSentences {
-		oldSentence := textSentences[i]
-		newSentence := fmt.Sprintf("%s <strike>[%s]</strike>", oldSentence, translatedSentences[i])
-		for _, r := range []string{".", "?", "!", "<br>"} {
-			text = strings.Replace(text, oldSentence+r, newSentence+r, 1)
-		}
+	resultText := userText
+	for i := range userSentences {
+		userSentence := strings.TrimSpace(userSentences[i])
+		translatedSentence := strings.TrimSpace(translatedSentences[i])
+		combinedSentence := fmt.Sprintf("%s <strike>[%s]</strike>", userSentence, translatedSentence)
+		resultText = strings.Replace(resultText, userSentence, combinedSentence, 1)
 	}
-	return text
+	resultText = convertLineBreaks(resultText)
+	return resultText
 }
 
 func (p pipe) getDoc(url string) (*goscraper.Document, error) {
@@ -169,14 +178,14 @@ func (p pipe) getUrlAuthor(url string) string {
 }
 
 func (p pipe) itemsToExplore(items []item) []item {
-	var itemsNoDeleted []item
+	var itemsWithoutDeleted []item
 	for _, item := range items {
 		if item.Title == deleted {
 			continue
 		}
 		item.Text = strings.ReplaceAll(item.Text, "<strike>", "<span class='blured'>")
 		item.Text = strings.ReplaceAll(item.Text, "</strike>", "</span>")
-		itemsNoDeleted = append(itemsNoDeleted, item)
+		itemsWithoutDeleted = append(itemsWithoutDeleted, item)
 	}
-	return itemsNoDeleted
+	return itemsWithoutDeleted
 }

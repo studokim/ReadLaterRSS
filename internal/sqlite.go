@@ -53,19 +53,43 @@ func (s Sqlite) migrate() error {
 			return err
 		}
 
-		_, err = db.Exec("create table feed(title unique, description, author, email, feedType check(feedType in ('url','text')) )")
+		_, err = db.Exec("create table feed(title unique not null, description not null, author not null, email not null, feedType not null check(feedType in ('url','text')) )")
 		if err != nil {
 			return err
 		}
-		f := feed{Title: "Default", Description: "Automatically created feed", Author: "ReadLaterRSS", Email: "-", FeedType: urlType}
-		_, err := db.Exec("insert into feed(title, description, author, email, feedType) values(?, ?, ?, ?, ?)", f.Title, f.Description, f.Author, f.Email, f.FeedType)
+		fdef := feed{Title: "Default", Description: "Automatically created feed", Author: "ReadLaterRSS", Email: "-", FeedType: urlType}
+		fdeu := feed{Title: "Deutsch", Description: "Auto-translated Deutsch texts", Author: "ReadLaterRSS", Email: "-", FeedType: textType}
+		_, err = db.Exec("insert into feed(title, description, author, email, feedType) values (?,?,?,?,?), (?,?,?,?,?)",
+			fdef.Title, fdef.Description, fdef.Author, fdef.Email, fdef.FeedType,
+			fdeu.Title, fdeu.Description, fdeu.Author, fdeu.Email, fdeu.FeedType)
 		if err != nil {
 			return err
 		}
-		_, err = db.Exec("create table item(feedTitle not null, id unique not null, title, created timestamp not null, url, text)")
+		_, err = db.Exec("create table item(feedTitle not null, id unique not null, title not null, created timestamp not null, url not null, text not null, foreign key(feedTitle) references feed(title))")
 		if err != nil {
 			return err
 		}
+
+		_, err = db.Exec("create table translate(feedTitle not null, langFrom not null check(length(langFrom) = 2), langTo not null check(length(langTo) = 2), foreign key(feedTitle) references feed(title))")
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec(`CREATE TRIGGER prevent_translate_when_not_textType
+			BEFORE INSERT ON translate FOR EACH ROW WHEN NEW.feedTitle IS NOT NULL
+			BEGIN
+    			SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM feed WHERE title = NEW.feedTitle AND feedType = 'text') THEN
+        			RAISE(ABORT, 'Cannot translate NEW.feedTitle. Can only translate feeds of type text.')
+    			END;
+			END;`)
+		if err != nil {
+			return err
+		}
+		tdeu := translate{FeedTitle: fdeu.Title, LangFrom: "de", LangTo: "en"}
+		_, err = db.Exec("insert into translate(feedTitle, langFrom, langTo) values (?,?,?)", tdeu.FeedTitle, tdeu.LangFrom, tdeu.LangTo)
+		if err != nil {
+			return err
+		}
+
 		_, err = db.Exec("create table meta(version int); insert into meta(version) values(1)")
 		return err
 

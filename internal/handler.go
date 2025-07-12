@@ -26,11 +26,15 @@ func NewHandler(rootUrl string, htmlFS embed.FS) (*Handler, error) {
 	if err != nil {
 		return nil, err
 	}
+	pipe, err := newPipe()
+	if err != nil {
+		return nil, err
+	}
 	handler := &Handler{
 		rootUrl: rootUrl,
 		htmlFS:  htmlFS,
 		history: history,
-		pipe:    newPipe(),
+		pipe:    pipe,
 	}
 	handler.registerEndpoints()
 	return handler, nil
@@ -51,34 +55,36 @@ func (h *Handler) handle(w http.ResponseWriter, err error) {
 }
 
 func (h *Handler) renderPage(w http.ResponseWriter, r *http.Request, pageName string, content any) {
-	t, err := template.ParseFS(h.htmlFS, "html/template.html", "html/"+pageName)
+	t, err := template.New("unnamed").Funcs(template.FuncMap{
+		"unescape": func(s string) template.HTML {
+			return template.HTML(s)
+		},
+	}).ParseFS(h.htmlFS, "html/template.html", "html/"+pageName)
 	if err != nil {
 		h.handle(w, err)
 		return
-	} else {
-		selectedFeed, err := h.getSelectedFeed(r)
-		if err != nil {
-			h.handle(w, err)
-			return
-		}
-		feeds, err := h.history.getFeeds()
-		if err != nil {
-			h.handle(w, err)
-			return
-		}
-		err = t.ExecuteTemplate(w, "template", struct {
-			SelectedFeed feed
-			FeedSelector []feed
-			Content      any
-		}{
-			SelectedFeed: selectedFeed,
-			FeedSelector: without(feeds, selectedFeed),
-			Content:      content,
-		})
-		if err != nil {
-			h.handle(w, err)
-			return
-		}
+	}
+	selectedFeed, err := h.getSelectedFeed(r)
+	if err != nil {
+		h.handle(w, err)
+		return
+	}
+	feeds, err := h.history.getFeeds()
+	if err != nil {
+		h.handle(w, err)
+		return
+	}
+	err = t.ExecuteTemplate(w, "template", struct {
+		SelectedFeed feed
+		FeedSelector []feed
+		Content      any
+	}{
+		SelectedFeed: selectedFeed,
+		FeedSelector: feeds,
+		Content:      content,
+	})
+	if err != nil {
+		h.handle(w, err)
 	}
 }
 

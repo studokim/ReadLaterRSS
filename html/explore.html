@@ -11,7 +11,7 @@
         </div>
     </div>
     <div class="row" id="spoiler_{{.Id}}" name="spoiler" style="text-align:justify; display:none">
-        <p>{{.Text}}</p>
+        <p>{{.Text | unescape}}</p>
         <p align="right"><em>{{.Created.Format "2006-01-02 15:04:05 MST"}}</em></p>
     </div>
 </div>
