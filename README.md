@@ -40,6 +40,8 @@ All the articles are saved into `history.yml` with the timestamp, so you may res
 
 ![New URL item](screenshots/save-url.png)
 
-![New text item](screenshots/save-text.png)
+![Explore URL items](screenshots/explore-url.png)
 
-![Explore](screenshots/explore.png)
+![Explore Text items](screenshots/explore-text.png)
+
+![RSS URL items](screenshots/rss-url.png)
