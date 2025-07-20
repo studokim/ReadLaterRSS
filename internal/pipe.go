@@ -116,18 +116,18 @@ func (p pipe) getUrlItemText(url string, userText string) string {
 
 func (p pipe) getTextItemText(feedTitle string, userText string) string {
 	if !p.translator.shouldTranslate(feedTitle) {
-		return userText
+		return convertLineBreaks(userText)
 	}
 
 	userText = fixCommonParsingProblems(userText)
 	translatedText, err := p.translator.translate(feedTitle, userText)
 	if err != nil {
-		return fmt.Sprintf("%s<br><br>[%s]", userText, err)
+		return convertLineBreaks(fmt.Sprintf("%s<br><br>[%s]", userText, err))
 	}
 	userSentences := splitOnSentences(userText)
 	translatedSentences := splitOnSentences(translatedText)
 	if len(userSentences) != len(translatedSentences) {
-		return fmt.Sprintf("%s<br><br><strike>[%s]</strike>", userText, translatedText)
+		return convertLineBreaks(fmt.Sprintf("%s<br><br><strike>[%s]</strike>", userText, translatedText))
 	}
 	resultText := userText
 	for i := range userSentences {
@@ -136,8 +136,7 @@ func (p pipe) getTextItemText(feedTitle string, userText string) string {
 		combinedSentence := fmt.Sprintf("%s <strike>[%s]</strike>", userSentence, translatedSentence)
 		resultText = strings.Replace(resultText, userSentence, combinedSentence, 1)
 	}
-	resultText = convertLineBreaks(resultText)
-	return resultText
+	return convertLineBreaks(resultText)
 }
 
 func (p pipe) getDoc(url string) (*goscraper.Document, error) {
