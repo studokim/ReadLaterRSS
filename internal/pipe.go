@@ -94,7 +94,7 @@ func (p pipe) itemToRssItem(f feed, feedUrl string, it item) *rss.Item {
 		Title:       it.Title,
 		Description: it.Text,
 		Created:     it.Created,
-		Link:        &rss.Link{Href: feedUrl},
+		Link:        &rss.Link{Href: it.Url},
 		Author:      &author,
 	}
 }
