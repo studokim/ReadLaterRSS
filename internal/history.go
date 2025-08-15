@@ -87,7 +87,7 @@ func (h *history) deleteItem(r item) error {
 }
 
 func (h *history) getItems(f feed) ([]item, error) {
-	res, err := h.db.Query("select id, title, created, url, text from item where feedTitle=?", f.Title)
+	res, err := h.db.Query("select id, title, created, url, text from item where feedTitle=? order by created desc", f.Title)
 	if err != nil {
 		return nil, err
 	}
